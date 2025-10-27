@@ -224,27 +224,27 @@ export function makeServer({ environment = "development" } = {}) {
             // Jobs endpoints
             this.get("/jobs", async (schema, request) => {
                 const {
-                    searchParam,
+                    search,
                     status,
-                    pageParam = "1",
-                    pageSizeParam = "10",
+                    page = "1",
+                    pageSize = "10",
                     sort,
                 } = request.queryParams;
 
-                let search: string | undefined;
+                let searchParam: string | undefined;
 
-                if (searchParam && Array.isArray(searchParam)) {
-                    search = searchParam[0]; // take first value if multiple
-                } else if (searchParam) {
-                    search = searchParam;
+                if (search && Array.isArray(search)) {
+                    searchParam = search[0]; // take first value if multiple
+                } else if (search) {
+                    searchParam = search;
                 }
 
-                const page = Array.isArray(pageParam)
-                    ? parseInt(pageParam[0])
-                    : parseInt(pageParam || "1");
-                const pageSize = Array.isArray(pageSizeParam)
-                    ? parseInt(pageSizeParam[0])
-                    : parseInt(pageSizeParam || "10");
+                const pageParam = Array.isArray(page)
+                    ? parseInt(page[0])
+                    : parseInt(page || "1");
+                const pageSizeParam = Array.isArray(pageSize)
+                    ? parseInt(pageSize[0])
+                    : parseInt(pageSize || "10");
 
                 // Simulate 5-10% error rate
                 if (Math.random() < 0.05) {
@@ -263,9 +263,11 @@ export function makeServer({ environment = "development" } = {}) {
 
                 let jobs = await query.toArray();
 
-                if (search) {
+                if (searchParam) {
                     jobs = jobs.filter((job) =>
-                        job.title.toLowerCase().includes(search.toLowerCase())
+                        job.title
+                            .toLowerCase()
+                            .includes(searchParam.toLowerCase())
                     );
                 }
 
@@ -274,8 +276,8 @@ export function makeServer({ environment = "development" } = {}) {
                 }
 
                 const total = jobs.length;
-                const start = (page - 1) * pageSize;
-                const paginatedJobs = jobs.slice(start, start + pageSize);
+                const start = (pageParam - 1) * pageSizeParam;
+                const paginatedJobs = jobs.slice(start, start + pageSizeParam);
 
                 return {
                     data: paginatedJobs,
@@ -283,7 +285,7 @@ export function makeServer({ environment = "development" } = {}) {
                         total,
                         page: page,
                         pageSize: pageSize,
-                        totalPages: Math.ceil(total / pageSize),
+                        totalPages: Math.ceil(total / pageSizeParam),
                     },
                 };
             });
@@ -358,26 +360,26 @@ export function makeServer({ environment = "development" } = {}) {
             // Candidates endpoints
             this.get("/candidates", async (schema, request) => {
                 const {
-                    searchParam,
+                    search,
                     stage,
-                    pageParam = "1",
-                    pageSizeParam = "20",
+                    page = "1",
+                    pageSize = "20",
                 } = request.queryParams;
 
-                let search: string | undefined;
+                let searchParam: string | undefined;
 
-                if (searchParam && Array.isArray(searchParam)) {
-                    search = searchParam[0]; // take first value if multiple
-                } else if (searchParam) {
-                    search = searchParam;
+                if (search && Array.isArray(search)) {
+                    searchParam = search[0]; // take first value if multiple
+                } else if (search) {
+                    searchParam = search;
                 }
 
-                const page = Array.isArray(pageParam)
-                    ? parseInt(pageParam[0])
-                    : parseInt(pageParam || "1");
-                const pageSize = Array.isArray(pageSizeParam)
-                    ? parseInt(pageSizeParam[0])
-                    : parseInt(pageSizeParam || "10");
+                const pageParam = Array.isArray(page)
+                    ? parseInt(page[0])
+                    : parseInt(page || "1");
+                const pageSizeParam = Array.isArray(pageSize)
+                    ? parseInt(pageSize[0])
+                    : parseInt(pageSize || "10");
 
                 let query = db.candidates.toCollection();
 
@@ -387,8 +389,8 @@ export function makeServer({ environment = "development" } = {}) {
 
                 let candidates = await query.toArray();
 
-                if (search) {
-                    const searchLower = search.toLowerCase();
+                if (searchParam) {
+                    const searchLower = searchParam.toLowerCase();
                     candidates = candidates.filter(
                         (c) =>
                             c.name.toLowerCase().includes(searchLower) ||
@@ -397,10 +399,10 @@ export function makeServer({ environment = "development" } = {}) {
                 }
 
                 const total = candidates.length;
-                const start = (page - 1) * pageSize;
+                const start = (pageParam - 1) * pageSizeParam;
                 const paginatedCandidates = candidates.slice(
                     start,
-                    start + pageSize
+                    start + pageSizeParam
                 );
 
                 return {

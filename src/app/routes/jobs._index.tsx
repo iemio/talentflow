@@ -1,3 +1,4 @@
+// src/app/routes/jobs._index.tsx
 import type { Route } from "./+types/jobs._index";
 import { useState, useEffect } from "react";
 import { Form, Link, useSearchParams, useNavigate } from "react-router";
@@ -38,6 +39,8 @@ import {
     Eye,
     Loader2,
     AlertCircle,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import { db, type Job } from "@/lib/db";
 import { toast } from "sonner";
@@ -451,7 +454,7 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
             }
 
             toast.success("Jobs reordered successfully");
-            navigate("/jobs");
+            //navigate("/jobs");
         } catch (error) {
             // Rollback on failure
             setOptimisticJobs(loaderData.data);
@@ -590,32 +593,49 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                 </DndContext>
             )}
 
-            {/* Pagination */}
+            {/* Pagination - UPDATED */}
             {loaderData.meta && loaderData.meta.totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-6">
-                    {Array.from(
-                        { length: loaderData.meta.totalPages },
-                        (_, i) => i + 1
-                    ).map((page) => (
-                        <Button
-                            key={page}
-                            variant={
-                                page === loaderData.meta.page
-                                    ? "default"
-                                    : "outline"
-                            }
-                            size="sm"
-                            onClick={() => {
-                                const newParams = new URLSearchParams(
-                                    searchParams
-                                );
-                                newParams.set("page", String(page));
-                                setSearchParams(newParams);
-                            }}
-                        >
-                            {page}
-                        </Button>
-                    ))}
+                <div className="flex items-center justify-center gap-4 mt-6">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={loaderData.meta.page === 1}
+                        onClick={() => {
+                            const newParams = new URLSearchParams(searchParams);
+                            newParams.set(
+                                "page",
+                                String(loaderData.meta.page - 1)
+                            );
+                            setSearchParams(newParams);
+                        }}
+                    >
+                        <ChevronLeft className="w-4 h-4 mr-1" />
+                        Previous
+                    </Button>
+
+                    <span className="text-sm font-medium text-gray-700 min-w-[120px] text-center">
+                        Page {loaderData.meta.page} of{" "}
+                        {loaderData.meta.totalPages}
+                    </span>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={
+                            loaderData.meta.page === loaderData.meta.totalPages
+                        }
+                        onClick={() => {
+                            const newParams = new URLSearchParams(searchParams);
+                            newParams.set(
+                                "page",
+                                String(parseInt(loaderData.meta.page) + 1)
+                            );
+                            setSearchParams(newParams);
+                        }}
+                    >
+                        Next
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
                 </div>
             )}
 
