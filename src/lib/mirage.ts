@@ -1,3 +1,4 @@
+// src/lib/mirage.ts
 import { createServer, Model, Factory, Response } from "miragejs";
 import { db, type Job } from "./db";
 import { faker } from "@faker-js/faker";
@@ -26,12 +27,21 @@ export function makeServer({ environment = "development" } = {}) {
                 },
                 tags() {
                     return faker.helpers.arrayElements(
-                        ["remote", "full-time", "senior", "mid-level"],
+                        [
+                            "remote",
+                            "full-time",
+                            "senior",
+                            "mid-level",
+                            "junior",
+                        ],
                         2
                     );
                 },
                 order(i: number) {
                     return i;
+                },
+                description() {
+                    return faker.lorem.paragraph();
                 },
                 createdAt() {
                     return faker.date.past();
@@ -59,7 +69,7 @@ export function makeServer({ environment = "development" } = {}) {
                 },
                 jobId() {
                     return "";
-                }, // Set manually
+                },
                 stage() {
                     return faker.helpers.arrayElement([
                         "applied",
@@ -81,15 +91,19 @@ export function makeServer({ environment = "development" } = {}) {
             const jobs = server.createList("job", 25);
 
             // Sync to IndexedDB
-            Promise.all(
-                jobs.map((job) =>
-                    db.jobs.put({
-                        ...job.attrs,
-                        createdAt: new Date(job.attrs.createdAt),
-                        updatedAt: new Date(job.attrs.updatedAt),
-                    })
-                )
-            );
+            jobs.forEach((job) => {
+                db.jobs.put({
+                    id: job.id,
+                    title: job.title,
+                    slug: job.slug,
+                    status: job.status as "active" | "archived",
+                    tags: job.tags,
+                    order: job.order,
+                    description: job.description,
+                    createdAt: new Date(job.createdAt),
+                    updatedAt: new Date(job.updatedAt),
+                });
+            });
 
             // Create 1000 candidates
             jobs.forEach((job) => {
@@ -103,19 +117,108 @@ export function makeServer({ environment = "development" } = {}) {
                 );
 
                 // Sync to IndexedDB
-                Promise.all(
-                    candidates.map((candidate) =>
-                        db.candidates.put({
-                            ...candidate.attrs,
-                            appliedAt: new Date(candidate.attrs.appliedAt),
-                        })
-                    )
-                );
+                candidates.forEach((candidate) => {
+                    db.candidates.put({
+                        id: candidate.id,
+                        name: candidate.name,
+                        email: candidate.email,
+                        jobId: candidate.jobId,
+                        stage: candidate.stage as any,
+                        appliedAt: new Date(candidate.appliedAt),
+                    });
+                });
+            });
+
+            // Create 3 sample assessments
+            const sampleJobs = jobs.slice(0, 3);
+            sampleJobs.forEach((job, idx) => {
+                db.assessments.add({
+                    jobId: job.id,
+                    sections: [
+                        {
+                            id: faker.string.uuid(),
+                            title: "Technical Skills",
+                            questions: [
+                                {
+                                    id: faker.string.uuid(),
+                                    type: "single",
+                                    text: "What is your primary programming language?",
+                                    required: true,
+                                    options: [
+                                        "JavaScript",
+                                        "Python",
+                                        "Java",
+                                        "C++",
+                                        "Other",
+                                    ],
+                                },
+                                {
+                                    id: faker.string.uuid(),
+                                    type: "multi",
+                                    text: "Which frameworks have you worked with?",
+                                    required: true,
+                                    options: [
+                                        "React",
+                                        "Vue",
+                                        "Angular",
+                                        "Svelte",
+                                        "Next.js",
+                                    ],
+                                },
+                                {
+                                    id: faker.string.uuid(),
+                                    type: "number",
+                                    text: "Years of professional experience?",
+                                    required: true,
+                                    minValue: 0,
+                                    maxValue: 50,
+                                },
+                            ],
+                        },
+                        {
+                            id: faker.string.uuid(),
+                            title: "Personal Information",
+                            questions: [
+                                {
+                                    id: faker.string.uuid(),
+                                    type: "text",
+                                    text: "Where are you based?",
+                                    required: true,
+                                    maxLength: 100,
+                                },
+                                {
+                                    id: faker.string.uuid(),
+                                    type: "longtext",
+                                    text: "Tell us about yourself",
+                                    required: false,
+                                    maxLength: 500,
+                                },
+                            ],
+                        },
+                    ],
+                    updatedAt: new Date(),
+                });
             });
         },
 
         routes() {
             this.namespace = "api";
+
+            // IMPORTANT: Pass through requests that shouldn't be intercepted
+            this.passthrough("/__manifest");
+            this.passthrough((request) => {
+                // Pass through Vite HMR and dev server requests
+                return (
+                    request.url.includes("/@") ||
+                    request.url.includes("/__") ||
+                    request.url.includes("/node_modules") ||
+                    request.url.includes(".js") ||
+                    request.url.includes(".css") ||
+                    request.url.includes(".svg") ||
+                    request.url.includes(".png")
+                );
+            });
+
             this.timing = faker.number.int({ min: 200, max: 1200 });
 
             // Jobs endpoints
@@ -310,49 +413,6 @@ export function makeServer({ environment = "development" } = {}) {
                 };
             });
 
-            this.post("/candidates", async (schema, request) => {
-                const attrs = JSON.parse(request.requestBody);
-
-                // Basic validation
-                const allowedStages = [
-                    "applied",
-                    "screen",
-                    "tech",
-                    "offer",
-                    "hired",
-                    "rejected",
-                ];
-                if (!attrs.name || !attrs.email) {
-                    return new Response(
-                        400,
-                        {},
-                        { error: "Name and email are required." }
-                    );
-                }
-                if (attrs.stage && !allowedStages.includes(attrs.stage)) {
-                    return new Response(
-                        400,
-                        {},
-                        { error: "Invalid stage value." }
-                    );
-                }
-
-                // Create candidate object
-                const candidate = {
-                    id: faker.string.uuid(),
-                    name: attrs.name,
-                    email: attrs.email,
-                    stage: attrs.stage || "applied",
-                    jobId: attrs.jobId || "",
-                    appliedAt: new Date(),
-                };
-
-                // Save to IndexedDB
-                await db.candidates.add(candidate);
-
-                return candidate;
-            });
-
             this.patch("/candidates/:id", async (schema, request) => {
                 const id = request.params.id;
                 const attrs = JSON.parse(request.requestBody);
@@ -405,8 +465,8 @@ export function makeServer({ environment = "development" } = {}) {
                     .equals(jobId)
                     .first();
 
-                if (existing) {
-                    await db.assessments.update(existing.id!, {
+                if (existing && existing.id) {
+                    await db.assessments.update(existing.id, {
                         ...data,
                         updatedAt: new Date(),
                     });
