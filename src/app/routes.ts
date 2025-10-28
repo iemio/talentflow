@@ -18,6 +18,7 @@ export default [
         route("jobs/:jobId", "routes/jobs.$jobId.tsx"),
         route("jobs/:jobId/edit", "routes/jobs.$jobId.edit.tsx"),
         route("candidates", "routes/candidates._index.tsx"),
+        route("candidates/kanban", "routes/candidates.kanban.tsx"),
         route("candidates/:id", "routes/candidates.$id.tsx"),
         route("assessments/:jobId", "routes/assessments.$jobId.tsx"),
         route(

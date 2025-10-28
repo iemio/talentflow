@@ -147,7 +147,7 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
                             {filteredCandidates.length !== 1 ? "s" : ""} found
                         </p>
                     </div>
-                    <Link to="/candidates?view=kanban">
+                    <Link to="/candidates/kanban">
                         <Button variant="outline">
                             <Filter className="w-4 h-4 mr-2" />
                             Kanban View

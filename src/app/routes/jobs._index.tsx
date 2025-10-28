@@ -418,6 +418,53 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
         setActiveId(event.active.id);
     };
 
+    // const handleDragEnd = async (event: DragEndEvent) => {
+    //     const { active, over } = event;
+    //     setActiveId(null);
+
+    //     if (!over || active.id === over.id) return;
+
+    //     const oldIndex = optimisticJobs.findIndex(
+    //         (j: Job) => j.id === active.id
+    //     );
+    //     const newIndex = optimisticJobs.findIndex((j: Job) => j.id === over.id);
+
+    //     if (oldIndex === -1 || newIndex === -1) return;
+
+    //     // Optimistic update
+    //     const newJobs = [...optimisticJobs];
+    //     const [movedJob] = newJobs.splice(oldIndex, 1);
+    //     newJobs.splice(newIndex, 0, movedJob);
+    //     setOptimisticJobs(newJobs);
+    //     setIsReordering(true);
+
+    //     try {
+    //         const response = await fetch(`/api/jobs/${active.id}/reorder`, {
+    //             method: "PATCH",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({
+    //                 fromOrder: optimisticJobs[oldIndex].order,
+    //                 toOrder: optimisticJobs[newIndex].order,
+    //             }),
+    //         });
+
+    //         if (!response.ok) {
+    //             throw new Error("Reorder failed");
+    //         }
+
+    //         toast.success("Jobs reordered successfully");
+
+    //         // Reload the page to get fresh data with updated order
+    //         // navigate(0); // This reloads the current route
+    //     } catch (error) {
+    //         // Rollback on failure
+    //         setOptimisticJobs(loaderData.data);
+    //         toast.error("Failed to reorder jobs. Changes reverted.");
+    //     } finally {
+    //         setIsReordering(false);
+    //     }
+    // };
+
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveId(null);
@@ -431,6 +478,10 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
 
         if (oldIndex === -1 || newIndex === -1) return;
 
+        // FIX: Capture order values BEFORE optimistic update
+        const fromOrder = optimisticJobs[oldIndex].order;
+        const toOrder = optimisticJobs[newIndex].order;
+
         // Optimistic update
         const newJobs = [...optimisticJobs];
         const [movedJob] = newJobs.splice(oldIndex, 1);
@@ -443,8 +494,8 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    fromOrder: optimisticJobs[oldIndex].order,
-                    toOrder: optimisticJobs[newIndex].order,
+                    fromOrder: fromOrder,
+                    toOrder: toOrder,
                 }),
             });
 
@@ -454,8 +505,8 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
 
             toast.success("Jobs reordered successfully");
 
-            // Reload the page to get fresh data with updated order
-            // navigate(0); // This reloads the current route
+            // FIX: Reload the current route to get fresh data with updated order
+            // navigate(0);
         } catch (error) {
             // Rollback on failure
             setOptimisticJobs(loaderData.data);

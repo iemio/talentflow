@@ -1,0 +1,274 @@
+import type { Route } from "./+types/candidates.kanban";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { db } from "@/lib/db";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { List, Search, Mail, Calendar } from "lucide-react";
+import { toast } from "sonner";
+
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+    const url = new URL(request.url);
+    const jobId = url.searchParams.get("jobId");
+
+    let candidates = await db.candidates.toArray();
+
+    if (jobId) {
+        candidates = candidates.filter((c) => c.jobId === jobId);
+    }
+
+    // Fetch job titles for display
+    const jobIds = [...new Set(candidates.map((c) => c.jobId))];
+    const jobs = await db.jobs.bulkGet(jobIds);
+    const jobMap = new Map(jobs.filter(Boolean).map((j) => [j!.id, j!.title]));
+
+    return {
+        candidates: candidates.map((c) => ({
+            ...c,
+            jobTitle: jobMap.get(c.jobId) || "Unknown Job",
+        })),
+    };
+}
+
+interface KanbanColumn {
+    id: string;
+    title: string;
+    color: string;
+}
+
+const columns: KanbanColumn[] = [
+    { id: "applied", title: "Applied", color: "bg-gray-100" },
+    { id: "screen", title: "Screening", color: "bg-yellow-100" },
+    { id: "tech", title: "Technical", color: "bg-blue-100" },
+    { id: "offer", title: "Offer", color: "bg-purple-100" },
+    { id: "hired", title: "Hired", color: "bg-green-100" },
+    { id: "rejected", title: "Rejected", color: "bg-red-100" },
+];
+
+function CandidateCard({
+    candidate,
+    onDragStart,
+}: {
+    candidate: any;
+    onDragStart: (e: React.DragEvent, candidate: any) => void;
+}) {
+    const getInitials = (name: string) => {
+        return name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    return (
+        <Link to={`/candidates/${candidate.id}`}>
+            <Card
+                draggable
+                onDragStart={(e) => onDragStart(e, candidate)}
+                className="mb-3 cursor-move hover:shadow-md transition-shadow"
+            >
+                <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                        <Avatar className="w-10 h-10">
+                            <AvatarFallback className="bg-blue-100 text-blue-600 text-sm">
+                                {getInitials(candidate.name)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm truncate">
+                                {candidate.name}
+                            </h3>
+                            <div className="flex items-center gap-1 mt-1 text-xs text-gray-600">
+                                <Mail className="w-3 h-3" />
+                                <span className="truncate">
+                                    {candidate.email}
+                                </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2 truncate">
+                                {candidate.jobTitle}
+                            </p>
+                            <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                                <Calendar className="w-3 h-3" />
+                                <span>
+                                    {new Date(
+                                        candidate.appliedAt
+                                    ).toLocaleDateString()}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </Link>
+    );
+}
+
+export default function CandidatesKanban({ loaderData }: Route.ComponentProps) {
+    const navigate = useNavigate();
+    const [searchTerm, setSearchTerm] = useState("");
+    const [draggedCandidate, setDraggedCandidate] = useState<any>(null);
+    const [draggedOverColumn, setDraggedOverColumn] = useState<string | null>(
+        null
+    );
+
+    // Filter candidates by search term
+    const filteredCandidates = loaderData.candidates.filter(
+        (candidate: any) =>
+            candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            candidate.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Group candidates by stage
+    const candidatesByStage = columns.reduce((acc, column) => {
+        acc[column.id] = filteredCandidates.filter(
+            (c: any) => c.stage === column.id
+        );
+        return acc;
+    }, {} as Record<string, any[]>);
+
+    const handleDragStart = (e: React.DragEvent, candidate: any) => {
+        setDraggedCandidate(candidate);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragOver = (e: React.DragEvent, columnId: string) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        setDraggedOverColumn(columnId);
+    };
+
+    const handleDragLeave = () => {
+        setDraggedOverColumn(null);
+    };
+
+    const handleDrop = async (e: React.DragEvent, newStage: string) => {
+        e.preventDefault();
+        setDraggedOverColumn(null);
+
+        if (!draggedCandidate || draggedCandidate.stage === newStage) {
+            setDraggedCandidate(null);
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/api/candidates/${draggedCandidate.id}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ stage: newStage }),
+                }
+            );
+
+            if (!response.ok) throw new Error("Failed to update stage");
+
+            toast.success(`Moved ${draggedCandidate.name} to ${newStage}`);
+
+            // Reload the page to reflect changes
+            navigate(`/candidates/kanban`, { replace: true });
+        } catch (error) {
+            toast.error("Failed to update candidate stage");
+        } finally {
+            setDraggedCandidate(null);
+        }
+    };
+
+    return (
+        <div className="p-8">
+            {/* Header */}
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">
+                            Candidate Pipeline
+                        </h1>
+                        <p className="text-gray-600 mt-1">
+                            Drag and drop candidates between stages
+                        </p>
+                    </div>
+                    <Link to="/candidates">
+                        <Button variant="outline">
+                            <List className="w-4 h-4 mr-2" />
+                            List View
+                        </Button>
+                    </Link>
+                </div>
+
+                {/* Search */}
+                <div className="relative max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search candidates..."
+                        className="pl-10"
+                    />
+                </div>
+            </div>
+
+            {/* Kanban Board */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                {columns.map((column) => {
+                    const candidates = candidatesByStage[column.id] || [];
+                    const isDraggedOver = draggedOverColumn === column.id;
+
+                    return (
+                        <div
+                            key={column.id}
+                            className="flex flex-col"
+                            onDragOver={(e) => handleDragOver(e, column.id)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, column.id)}
+                        >
+                            <Card
+                                className={`flex-1 ${
+                                    isDraggedOver ? "ring-2 ring-blue-500" : ""
+                                }`}
+                            >
+                                <CardHeader
+                                    className={`${column.color} border-b`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="font-semibold text-sm">
+                                            {column.title}
+                                        </h2>
+                                        <Badge
+                                            variant="secondary"
+                                            className="bg-white"
+                                        >
+                                            {candidates.length}
+                                        </Badge>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-4 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
+                                    {candidates.length === 0 ? (
+                                        <div className="text-center text-gray-400 text-sm mt-8">
+                                            No candidates
+                                        </div>
+                                    ) : (
+                                        candidates.map((candidate) => (
+                                            <CandidateCard
+                                                key={candidate.id}
+                                                candidate={candidate}
+                                                onDragStart={handleDragStart}
+                                            />
+                                        ))
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Stats */}
+            <div className="mt-6 text-sm text-gray-600 text-center">
+                Total candidates: {filteredCandidates.length}
+            </div>
+        </div>
+    );
+}

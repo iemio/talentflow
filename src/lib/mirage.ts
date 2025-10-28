@@ -272,6 +272,69 @@ export function makeServer({ environment = "development" } = {}) {
             });
 
             // FIX: Completely rewritten reorder endpoint
+            // this.patch("/jobs/:id/reorder", async (schema, request) => {
+            //     if (Math.random() < 0.1) {
+            //         return new Response(500, {}, { error: "Reorder failed" });
+            //     }
+
+            //     const jobId = request.params.id;
+            //     const { fromOrder, toOrder } = JSON.parse(request.requestBody);
+
+            //     console.log(
+            //         `Reordering job ${jobId} from ${fromOrder} to ${toOrder}`
+            //     );
+
+            //     try {
+            //         await db.transaction("rw", db.jobs, async () => {
+            //             // Get all jobs sorted by current order
+            //             const allJobs = await db.jobs
+            //                 .orderBy("order")
+            //                 .toArray();
+
+            //             // Find the job being moved
+            //             const jobToMove = allJobs.find(
+            //                 (j) => j.order === fromOrder
+            //             );
+            //             if (!jobToMove) {
+            //                 throw new Error("Job not found");
+            //             }
+
+            //             // Create new order array
+            //             const reorderedJobs = [...allJobs];
+
+            //             // Remove job from old position
+            //             const oldIndex = reorderedJobs.findIndex(
+            //                 (j) => j.id === jobToMove.id
+            //             );
+            //             reorderedJobs.splice(oldIndex, 1);
+
+            //             // Insert at new position
+            //             const newIndex = reorderedJobs.findIndex(
+            //                 (j) => j.order === toOrder
+            //             );
+            //             reorderedJobs.splice(newIndex, 0, jobToMove);
+
+            //             // Update all jobs with new sequential order
+            //             const updates = reorderedJobs.map((job, index) =>
+            //                 db.jobs.update(job.id, {
+            //                     order: index,
+            //                     updatedAt: new Date(),
+            //                 })
+            //             );
+
+            //             await Promise.all(updates);
+
+            //             console.log("✅ Reorder complete");
+            //         });
+
+            //         return { success: true };
+            //     } catch (error) {
+            //         console.error("❌ Reorder failed:", error);
+            //         return new Response(500, {}, { error: "Reorder failed" });
+            //     }
+            // });
+            // Replace the reorder endpoint in mirage.ts with this:
+
             this.patch("/jobs/:id/reorder", async (schema, request) => {
                 if (Math.random() < 0.1) {
                     return new Response(500, {}, { error: "Reorder failed" });
@@ -281,7 +344,7 @@ export function makeServer({ environment = "development" } = {}) {
                 const { fromOrder, toOrder } = JSON.parse(request.requestBody);
 
                 console.log(
-                    `Reordering job ${jobId} from ${fromOrder} to ${toOrder}`
+                    `🔄 Reordering job ${jobId} from order ${fromOrder} to order ${toOrder}`
                 );
 
                 try {
@@ -291,45 +354,69 @@ export function makeServer({ environment = "development" } = {}) {
                             .orderBy("order")
                             .toArray();
 
-                        // Find the job being moved
-                        const jobToMove = allJobs.find(
+                        console.log(
+                            "📋 Current job orders:",
+                            allJobs.map((j) => ({
+                                id: j.id,
+                                order: j.order,
+                                title: j.title,
+                            }))
+                        );
+
+                        // Find indices
+                        const fromIndex = allJobs.findIndex(
                             (j) => j.order === fromOrder
                         );
-                        if (!jobToMove) {
-                            throw new Error("Job not found");
-                        }
-
-                        // Create new order array
-                        const reorderedJobs = [...allJobs];
-
-                        // Remove job from old position
-                        const oldIndex = reorderedJobs.findIndex(
-                            (j) => j.id === jobToMove.id
-                        );
-                        reorderedJobs.splice(oldIndex, 1);
-
-                        // Insert at new position
-                        const newIndex = reorderedJobs.findIndex(
+                        const toIndex = allJobs.findIndex(
                             (j) => j.order === toOrder
                         );
-                        reorderedJobs.splice(newIndex, 0, jobToMove);
 
-                        // Update all jobs with new sequential order
-                        const updates = reorderedJobs.map((job, index) =>
-                            db.jobs.update(job.id, {
-                                order: index,
-                                updatedAt: new Date(),
-                            })
+                        if (fromIndex === -1 || toIndex === -1) {
+                            console.error("❌ Invalid indices:", {
+                                fromIndex,
+                                toIndex,
+                            });
+                            throw new Error("Invalid order values");
+                        }
+
+                        // Create new array with reordered jobs
+                        const reorderedJobs = [...allJobs];
+                        const [movedJob] = reorderedJobs.splice(fromIndex, 1);
+                        reorderedJobs.splice(toIndex, 0, movedJob);
+
+                        console.log(
+                            "🔄 New order:",
+                            reorderedJobs.map((j) => j.title)
                         );
 
-                        await Promise.all(updates);
+                        // Update ALL jobs with sequential order values
+                        // CRITICAL: Use a for loop instead of Promise.all to ensure sequential updates
+                        for (let i = 0; i < reorderedJobs.length; i++) {
+                            await db.jobs.update(reorderedJobs[i].id, {
+                                order: i,
+                                updatedAt: new Date(),
+                            });
+                        }
 
-                        console.log("✅ Reorder complete");
+                        console.log(
+                            "✅ Reorder complete - all jobs updated sequentially"
+                        );
                     });
+
+                    // Verify the update worked
+                    const verifyJobs = await db.jobs.orderBy("order").toArray();
+                    console.log(
+                        "✅ Verified orders:",
+                        verifyJobs.map((j) => ({
+                            id: j.id,
+                            order: j.order,
+                            title: j.title,
+                        }))
+                    );
 
                     return { success: true };
                 } catch (error) {
-                    console.error("❌ Reorder failed:", error);
+                    console.error("❌ Reorder transaction failed:", error);
                     return new Response(500, {}, { error: "Reorder failed" });
                 }
             });
