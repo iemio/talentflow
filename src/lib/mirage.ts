@@ -1,4 +1,4 @@
-// src/lib/mirage.ts
+// src/lib/mirage.ts - FIXED REORDER VERSION
 import { createServer, Model, Factory, Response } from "miragejs";
 import { db, type Job } from "./db";
 import { faker } from "@faker-js/faker";
@@ -50,7 +50,6 @@ export function makeServer({ environment = "development" } = {}) {
                     return new Date();
                 },
                 afterCreate(job: any) {
-                    // safely generate slug from title after creation
                     job.update({
                         slug: faker.helpers.slugify(job.title).toLowerCase(),
                     });
@@ -86,128 +85,104 @@ export function makeServer({ environment = "development" } = {}) {
             }),
         },
 
-        seeds(server) {
-            // Create 25 jobs
-            const jobs = server.createList("job", 25);
+        seeds: async (server) => {
+            const existingJobs = await db.jobs.toArray();
 
-            // Sync to IndexedDB
-            jobs.forEach((job) => {
-                db.jobs.put({
-                    id: job.id,
-                    title: job.title,
-                    slug: job.slug,
-                    status: job.status as "active" | "archived",
-                    tags: job.tags,
-                    order: job.order,
-                    description: job.description,
-                    createdAt: new Date(job.createdAt),
-                    updatedAt: new Date(job.updatedAt),
-                });
-            });
+            if (existingJobs.length === 0) {
+                const jobs = server.createList("job", 25);
 
-            // Create 1000 candidates
-            jobs.forEach((job) => {
-                const candidateCount = faker.number.int({ min: 30, max: 50 });
-                const candidates = server.createList(
-                    "candidate",
-                    candidateCount,
-                    {
-                        jobId: job.id,
-                    }
-                );
-
-                // Sync to IndexedDB
-                candidates.forEach((candidate) => {
-                    db.candidates.put({
-                        id: candidate.id,
-                        name: candidate.name,
-                        email: candidate.email,
-                        jobId: candidate.jobId,
-                        stage: candidate.stage as any,
-                        appliedAt: new Date(candidate.appliedAt),
+                // FIX: Assign proper order based on array index
+                for (let i = 0; i < jobs.length; i++) {
+                    const job = jobs[i];
+                    await db.jobs.put({
+                        id: job.id,
+                        title: job.title,
+                        slug: job.slug,
+                        status: job.status as "active" | "archived",
+                        tags: job.tags,
+                        order: i, // Use index as order
+                        description: job.description,
+                        createdAt: new Date(job.createdAt),
+                        updatedAt: new Date(job.updatedAt),
                     });
-                });
-            });
+                }
 
-            // Create 3 sample assessments
-            const sampleJobs = jobs.slice(0, 3);
-            sampleJobs.forEach((job, idx) => {
-                db.assessments.add({
-                    jobId: job.id,
-                    sections: [
+                for (const job of jobs) {
+                    const candidateCount = faker.number.int({
+                        min: 30,
+                        max: 50,
+                    });
+                    const candidates = server.createList(
+                        "candidate",
+                        candidateCount,
                         {
-                            id: faker.string.uuid(),
-                            title: "Technical Skills",
-                            questions: [
-                                {
-                                    id: faker.string.uuid(),
-                                    type: "single",
-                                    text: "What is your primary programming language?",
-                                    required: true,
-                                    options: [
-                                        "JavaScript",
-                                        "Python",
-                                        "Java",
-                                        "C++",
-                                        "Other",
-                                    ],
-                                },
-                                {
-                                    id: faker.string.uuid(),
-                                    type: "multi",
-                                    text: "Which frameworks have you worked with?",
-                                    required: true,
-                                    options: [
-                                        "React",
-                                        "Vue",
-                                        "Angular",
-                                        "Svelte",
-                                        "Next.js",
-                                    ],
-                                },
-                                {
-                                    id: faker.string.uuid(),
-                                    type: "number",
-                                    text: "Years of professional experience?",
-                                    required: true,
-                                    minValue: 0,
-                                    maxValue: 50,
-                                },
-                            ],
-                        },
-                        {
-                            id: faker.string.uuid(),
-                            title: "Personal Information",
-                            questions: [
-                                {
-                                    id: faker.string.uuid(),
-                                    type: "text",
-                                    text: "Where are you based?",
-                                    required: true,
-                                    maxLength: 100,
-                                },
-                                {
-                                    id: faker.string.uuid(),
-                                    type: "longtext",
-                                    text: "Tell us about yourself",
-                                    required: false,
-                                    maxLength: 500,
-                                },
-                            ],
-                        },
-                    ],
-                    updatedAt: new Date(),
-                });
-            });
+                            jobId: job.id,
+                        }
+                    );
+
+                    for (const candidate of candidates) {
+                        await db.candidates.put({
+                            id: candidate.id,
+                            name: candidate.name,
+                            email: candidate.email,
+                            jobId: candidate.jobId,
+                            stage: candidate.stage as any,
+                            appliedAt: new Date(candidate.appliedAt),
+                        });
+                    }
+                }
+
+                const sampleJobs = jobs.slice(0, 3);
+                for (const job of sampleJobs) {
+                    await db.assessments.add({
+                        jobId: job.id,
+                        sections: [
+                            {
+                                id: faker.string.uuid(),
+                                title: "Technical Skills",
+                                questions: [
+                                    {
+                                        id: faker.string.uuid(),
+                                        type: "single",
+                                        text: "What is your primary programming language?",
+                                        required: true,
+                                        options: [
+                                            "JavaScript",
+                                            "Python",
+                                            "Java",
+                                            "C++",
+                                            "Other",
+                                        ],
+                                    },
+                                    {
+                                        id: faker.string.uuid(),
+                                        type: "multi",
+                                        text: "Which frameworks have you worked with?",
+                                        required: true,
+                                        options: [
+                                            "React",
+                                            "Vue",
+                                            "Angular",
+                                            "Svelte",
+                                            "Next.js",
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                        updatedAt: new Date(),
+                    });
+                }
+            } else {
+                console.log("🟢 Mirage: existing data found, skipping reseed");
+            }
         },
 
         routes() {
             this.namespace = "api";
 
-            // IMPORTANT: Pass through requests that shouldn't be intercepted
             this.passthrough("/__manifest");
             this.passthrough((request) => {
-                // Pass through Vite HMR and dev server requests
                 return (
                     request.url.includes("/@") ||
                     request.url.includes("/__") ||
@@ -231,22 +206,6 @@ export function makeServer({ environment = "development" } = {}) {
                     sort,
                 } = request.queryParams;
 
-                let searchParam: string | undefined;
-
-                if (search && Array.isArray(search)) {
-                    searchParam = search[0]; // take first value if multiple
-                } else if (search) {
-                    searchParam = search;
-                }
-
-                const pageParam = Array.isArray(page)
-                    ? parseInt(page[0])
-                    : parseInt(page || "1");
-                const pageSizeParam = Array.isArray(pageSize)
-                    ? parseInt(pageSize[0])
-                    : parseInt(pageSize || "10");
-
-                // Simulate 5-10% error rate
                 if (Math.random() < 0.05) {
                     return new Response(
                         500,
@@ -263,29 +222,30 @@ export function makeServer({ environment = "development" } = {}) {
 
                 let jobs = await query.toArray();
 
-                if (searchParam) {
+                if (search) {
                     jobs = jobs.filter((job) =>
                         job.title
                             .toLowerCase()
-                            .includes(searchParam.toLowerCase())
+                            .includes((search as string).toLowerCase())
                     );
                 }
 
-                if (sort === "order") {
-                    jobs.sort((a, b) => a.order - b.order);
-                }
+                // FIX: Always sort by order to maintain consistent ordering
+                jobs.sort((a, b) => a.order - b.order);
 
                 const total = jobs.length;
-                const start = (pageParam - 1) * pageSizeParam;
-                const paginatedJobs = jobs.slice(start, start + pageSizeParam);
+                const pageNum = parseInt(page as string);
+                const pageSizeNum = parseInt(pageSize as string);
+                const start = (pageNum - 1) * pageSizeNum;
+                const paginatedJobs = jobs.slice(start, start + pageSizeNum);
 
                 return {
                     data: paginatedJobs,
                     meta: {
                         total,
-                        page: page,
-                        pageSize: pageSize,
-                        totalPages: Math.ceil(total / pageSizeParam),
+                        page: pageNum,
+                        pageSize: pageSizeNum,
+                        totalPages: Math.ceil(total / pageSizeNum),
                     },
                 };
             });
@@ -311,50 +271,67 @@ export function makeServer({ environment = "development" } = {}) {
                 return db.jobs.get(id);
             });
 
+            // FIX: Completely rewritten reorder endpoint
             this.patch("/jobs/:id/reorder", async (schema, request) => {
-                // Simulate occasional failures for rollback testing
                 if (Math.random() < 0.1) {
                     return new Response(500, {}, { error: "Reorder failed" });
                 }
 
+                const jobId = request.params.id;
                 const { fromOrder, toOrder } = JSON.parse(request.requestBody);
-                const jobs = await db.jobs.orderBy("order").toArray();
 
-                const jobToMove = jobs.find((j) => j.order === fromOrder);
-                if (!jobToMove)
-                    return new Response(404, {}, { error: "Job not found" });
+                console.log(
+                    `Reordering job ${jobId} from ${fromOrder} to ${toOrder}`
+                );
 
-                // Reorder logic
-                await db.transaction("rw", db.jobs, async () => {
-                    if (fromOrder < toOrder) {
-                        await Promise.all(
-                            jobs
-                                .filter(
-                                    (j) =>
-                                        j.order > fromOrder &&
-                                        j.order <= toOrder
-                                )
-                                .map((j) =>
-                                    db.jobs.update(j.id, { order: j.order - 1 })
-                                )
+                try {
+                    await db.transaction("rw", db.jobs, async () => {
+                        // Get all jobs sorted by current order
+                        const allJobs = await db.jobs
+                            .orderBy("order")
+                            .toArray();
+
+                        // Find the job being moved
+                        const jobToMove = allJobs.find(
+                            (j) => j.order === fromOrder
                         );
-                    } else {
-                        await Promise.all(
-                            jobs
-                                .filter(
-                                    (j) =>
-                                        j.order >= toOrder &&
-                                        j.order < fromOrder
-                                )
-                                .map((j) =>
-                                    db.jobs.update(j.id, { order: j.order + 1 })
-                                )
-                        );
-                    }
-                    await db.jobs.update(jobToMove.id, { order: toOrder });
-                });
+                        if (!jobToMove) {
+                            throw new Error("Job not found");
+                        }
 
-                return { success: true };
+                        // Create new order array
+                        const reorderedJobs = [...allJobs];
+
+                        // Remove job from old position
+                        const oldIndex = reorderedJobs.findIndex(
+                            (j) => j.id === jobToMove.id
+                        );
+                        reorderedJobs.splice(oldIndex, 1);
+
+                        // Insert at new position
+                        const newIndex = reorderedJobs.findIndex(
+                            (j) => j.order === toOrder
+                        );
+                        reorderedJobs.splice(newIndex, 0, jobToMove);
+
+                        // Update all jobs with new sequential order
+                        const updates = reorderedJobs.map((job, index) =>
+                            db.jobs.update(job.id, {
+                                order: index,
+                                updatedAt: new Date(),
+                            })
+                        );
+
+                        await Promise.all(updates);
+
+                        console.log("✅ Reorder complete");
+                    });
+
+                    return { success: true };
+                } catch (error) {
+                    console.error("❌ Reorder failed:", error);
+                    return new Response(500, {}, { error: "Reorder failed" });
+                }
             });
 
             // Candidates endpoints
@@ -366,21 +343,6 @@ export function makeServer({ environment = "development" } = {}) {
                     pageSize = "20",
                 } = request.queryParams;
 
-                let searchParam: string | undefined;
-
-                if (search && Array.isArray(search)) {
-                    searchParam = search[0]; // take first value if multiple
-                } else if (search) {
-                    searchParam = search;
-                }
-
-                const pageParam = Array.isArray(page)
-                    ? parseInt(page[0])
-                    : parseInt(page || "1");
-                const pageSizeParam = Array.isArray(pageSize)
-                    ? parseInt(pageSize[0])
-                    : parseInt(pageSize || "10");
-
                 let query = db.candidates.toCollection();
 
                 if (stage && stage !== "all") {
@@ -389,8 +351,8 @@ export function makeServer({ environment = "development" } = {}) {
 
                 let candidates = await query.toArray();
 
-                if (searchParam) {
-                    const searchLower = searchParam.toLowerCase();
+                if (search) {
+                    const searchLower = (search as string).toLowerCase();
                     candidates = candidates.filter(
                         (c) =>
                             c.name.toLowerCase().includes(searchLower) ||
@@ -399,19 +361,17 @@ export function makeServer({ environment = "development" } = {}) {
                 }
 
                 const total = candidates.length;
-                const start = (pageParam - 1) * pageSizeParam;
+                const pageNum = parseInt(page as string);
+                const pageSizeNum = parseInt(pageSize as string);
+                const start = (pageNum - 1) * pageSizeNum;
                 const paginatedCandidates = candidates.slice(
                     start,
-                    start + pageSizeParam
+                    start + pageSizeNum
                 );
 
                 return {
                     data: paginatedCandidates,
-                    meta: {
-                        total,
-                        page: page,
-                        pageSize: pageSize,
-                    },
+                    meta: { total, page: pageNum, pageSize: pageSizeNum },
                 };
             });
 
@@ -425,7 +385,6 @@ export function makeServer({ environment = "development" } = {}) {
                     attrs.stage &&
                     attrs.stage !== candidate.stage
                 ) {
-                    // Record status change
                     await db.statusChanges.add({
                         candidateId: id,
                         from: candidate.stage,

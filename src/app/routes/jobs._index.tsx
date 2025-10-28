@@ -1,4 +1,3 @@
-// src/app/routes/jobs._index.tsx
 import type { Route } from "./+types/jobs._index";
 import { useState, useEffect } from "react";
 import { Form, Link, useSearchParams, useNavigate } from "react-router";
@@ -454,7 +453,9 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
             }
 
             toast.success("Jobs reordered successfully");
-            //navigate("/jobs");
+
+            // Reload the page to get fresh data with updated order
+            // navigate(0); // This reloads the current route
         } catch (error) {
             // Rollback on failure
             setOptimisticJobs(loaderData.data);
@@ -628,7 +629,7 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                             const newParams = new URLSearchParams(searchParams);
                             newParams.set(
                                 "page",
-                                String(parseInt(loaderData.meta.page) + 1)
+                                String(loaderData.meta.page + 1)
                             );
                             setSearchParams(newParams);
                         }}

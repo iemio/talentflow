@@ -1,7 +1,5 @@
-// src/app/routes/_index.tsx
 import type { Route } from "./+types/_index";
 import { Link } from "react-router";
-import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import {
     Card,

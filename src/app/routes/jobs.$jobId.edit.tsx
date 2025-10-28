@@ -1,5 +1,5 @@
 import type { Route } from "./+types/jobs.$jobId.edit";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
