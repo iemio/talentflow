@@ -105,18 +105,18 @@ function SortableJobCard({
                         {...listeners}
                         className="mt-1 cursor-grab active:cursor-grabbing touch-none"
                     >
-                        <GripVertical className="w-5 h-5 text-gray-400" />
+                        <GripVertical className="w-5 h-5 text-muted-foreground" />
                     </button>
                     <div className="flex-1">
                         <div className="flex items-start justify-between">
                             <div>
                                 <Link
                                     to={`/jobs/${job.id}`}
-                                    className="text-lg font-semibold hover:text-blue-600"
+                                    className="text-lg font-semibold text-foreground hover:text-blue-600 dark:hover:text-blue-400"
                                 >
                                     {job.title}
                                 </Link>
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="text-sm text-muted-foreground mt-1">
                                     /{job.slug}
                                 </p>
                             </div>
@@ -131,7 +131,7 @@ function SortableJobCard({
                             </Badge>
                         </div>
                         {job.description && (
-                            <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                                 {job.description}
                             </p>
                         )}
@@ -484,7 +484,7 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
         setStatusFilter(value);
         const newParams = new URLSearchParams(searchParams);
         newParams.set("status", value);
-        newParams.set("page", "1"); // Reset to first page
+        newParams.set("page", "1");
         setSearchParams(newParams);
     };
 
@@ -494,8 +494,8 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
         <div className="p-8">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Jobs</h1>
-                    <p className="text-gray-600 mt-1">
+                    <h1 className="text-3xl font-bold text-foreground">Jobs</h1>
+                    <p className="text-muted-foreground mt-1">
                         Manage your job openings
                     </p>
                 </div>
@@ -511,9 +511,9 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
             </div>
 
             {isReordering && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                    <span className="text-sm text-blue-800">
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm text-blue-800 dark:text-blue-300">
                         Reordering jobs...
                     </span>
                 </div>
@@ -551,11 +551,11 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
             {optimisticJobs.length === 0 ? (
                 <Card>
                     <CardContent className="py-12 text-center">
-                        <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-foreground mb-2">
                             No jobs found
                         </h3>
-                        <p className="text-gray-600 mb-4">
+                        <p className="text-muted-foreground mb-4">
                             Get started by creating your first job opening
                         </p>
                         <Button
@@ -599,9 +599,9 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                             <Card className="shadow-lg">
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start gap-3">
-                                        <GripVertical className="w-5 h-5 text-gray-400 mt-1" />
+                                        <GripVertical className="w-5 h-5 text-muted-foreground mt-1" />
                                         <div>
-                                            <h3 className="text-lg font-semibold">
+                                            <h3 className="text-lg font-semibold text-foreground">
                                                 {activeJob.title}
                                             </h3>
                                             <Badge
@@ -642,7 +642,7 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                         Previous
                     </Button>
 
-                    <span className="text-sm font-medium text-gray-700 min-w-[120px] text-center">
+                    <span className="text-sm font-medium text-foreground min-w-[120px] text-center">
                         Page {loaderData.meta.page} of{" "}
                         {loaderData.meta.totalPages}
                     </span>

@@ -59,12 +59,14 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
     const [isUpdatingStage, setIsUpdatingStage] = useState(false);
 
     const stageColors: Record<string, string> = {
-        applied: "bg-gray-100 text-gray-800",
-        screen: "bg-yellow-100 text-yellow-800",
-        tech: "bg-blue-100 text-blue-800",
-        offer: "bg-purple-100 text-purple-800",
-        hired: "bg-green-100 text-green-800",
-        rejected: "bg-red-100 text-red-800",
+        applied:
+            "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
+        screen: "bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300",
+        tech: "bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300",
+        offer: "bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300",
+        hired: "bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300",
+        rejected:
+            "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300",
     };
 
     const stages = ["applied", "screen", "tech", "offer", "hired", "rejected"];
@@ -81,11 +83,17 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
     const getStageIcon = (stage: string) => {
         switch (stage) {
             case "hired":
-                return <CheckCircle className="w-5 h-5 text-green-600" />;
+                return (
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                );
             case "rejected":
-                return <XCircle className="w-5 h-5 text-red-600" />;
+                return (
+                    <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                );
             default:
-                return <Clock className="w-5 h-5 text-blue-600" />;
+                return (
+                    <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                );
         }
     };
 
@@ -144,17 +152,17 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                         <CardHeader>
                             <div className="flex items-start gap-4">
                                 <Avatar className="w-16 h-16">
-                                    <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
+                                    <AvatarFallback className="bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xl">
                                         {getInitials(candidate.name)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h1 className="text-2xl font-bold text-gray-900">
+                                            <h1 className="text-2xl font-bold text-foreground">
                                                 {candidate.name}
                                             </h1>
-                                            <div className="flex items-center gap-2 mt-1 text-gray-600">
+                                            <div className="flex items-center gap-2 mt-1 text-muted-foreground">
                                                 <Mail className="w-4 h-4" />
                                                 <span>{candidate.email}</span>
                                             </div>
@@ -171,7 +179,7 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                                     {job && (
                                         <Link
                                             to={`/jobs/${job.id}`}
-                                            className="flex items-center gap-2 mt-3 text-sm text-blue-600 hover:underline"
+                                            className="flex items-center gap-2 mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline"
                                         >
                                             <Briefcase className="w-4 h-4" />
                                             {job.title}
@@ -181,7 +189,7 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Calendar className="w-4 h-4" />
                                 <span>
                                     Applied on{" "}
@@ -191,8 +199,8 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                                 </span>
                             </div>
                             {hasAssessment && (
-                                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                    <p className="text-sm text-green-800">
+                                <div className="mt-3 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+                                    <p className="text-sm text-green-800 dark:text-green-300">
                                         ✓ Assessment completed
                                     </p>
                                 </div>
@@ -240,7 +248,7 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                         </CardHeader>
                         <CardContent>
                             {timeline.length === 0 ? (
-                                <p className="text-sm text-gray-600 text-center py-8">
+                                <p className="text-sm text-muted-foreground text-center py-8">
                                     No activity yet
                                 </p>
                             ) : (
@@ -248,18 +256,18 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                                     {/* Initial application */}
                                     <div className="flex gap-4">
                                         <div className="flex flex-col items-center">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
                                                 {getStageIcon("applied")}
                                             </div>
                                             {timeline.length > 0 && (
-                                                <div className="w-0.5 h-full bg-gray-200 mt-2" />
+                                                <div className="w-0.5 h-full bg-border mt-2" />
                                             )}
                                         </div>
                                         <div className="flex-1 pb-4">
-                                            <p className="font-medium">
+                                            <p className="font-medium text-foreground">
                                                 Applied to position
                                             </p>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-sm text-muted-foreground">
                                                 {new Date(
                                                     candidate.appliedAt
                                                 ).toLocaleString()}
@@ -275,18 +283,18 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                                                 className="flex gap-4"
                                             >
                                                 <div className="flex flex-col items-center">
-                                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
                                                         {getStageIcon(
                                                             change.to
                                                         )}
                                                     </div>
                                                     {index <
                                                         timeline.length - 1 && (
-                                                        <div className="w-0.5 h-full bg-gray-200 mt-2" />
+                                                        <div className="w-0.5 h-full bg-border mt-2" />
                                                     )}
                                                 </div>
                                                 <div className="flex-1 pb-4">
-                                                    <p className="font-medium">
+                                                    <p className="font-medium text-foreground">
                                                         Moved from{" "}
                                                         <span className="capitalize">
                                                             {change.from}
@@ -296,13 +304,13 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                                                             {change.to}
                                                         </span>
                                                     </p>
-                                                    <p className="text-sm text-gray-600">
+                                                    <p className="text-sm text-muted-foreground">
                                                         {new Date(
                                                             change.timestamp
                                                         ).toLocaleString()}
                                                     </p>
                                                     {change.note && (
-                                                        <p className="text-sm mt-2 p-2 bg-gray-50 rounded">
+                                                        <p className="text-sm mt-2 p-2 bg-muted rounded">
                                                             {change.note}
                                                         </p>
                                                     )}
@@ -379,7 +387,7 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                                 </Button>
                             </div>
                             <Separator />
-                            <p className="text-sm text-gray-500 text-center">
+                            <p className="text-sm text-muted-foreground text-center">
                                 No notes yet
                             </p>
                         </CardContent>
@@ -392,7 +400,7 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">
                                     Current Stage
                                 </p>
                                 <Badge
@@ -404,10 +412,10 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                             </div>
                             <Separator />
                             <div>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">
                                     Applied Date
                                 </p>
-                                <p className="font-medium">
+                                <p className="font-medium text-foreground">
                                     {new Date(
                                         candidate.appliedAt
                                     ).toLocaleDateString()}
@@ -415,10 +423,10 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                             </div>
                             <Separator />
                             <div>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">
                                     Days in Pipeline
                                 </p>
-                                <p className="font-medium">
+                                <p className="font-medium text-foreground">
                                     {Math.floor(
                                         (Date.now() -
                                             new Date(

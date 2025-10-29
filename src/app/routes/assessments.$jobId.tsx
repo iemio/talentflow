@@ -93,7 +93,7 @@ function QuestionEditor({
             >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
-                        <GripVertical className="w-5 h-5 text-gray-400" />
+                        <GripVertical className="w-5 h-5 text-muted-foreground" />
                         <span className="font-medium">
                             {question.text || "New Question"}
                         </span>
@@ -107,7 +107,7 @@ function QuestionEditor({
                                 onDelete();
                             }}
                         >
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                         {isExpanded ? (
                             <ChevronUp className="w-5 h-5" />
@@ -192,10 +192,6 @@ function QuestionEditor({
                                         options: lines,
                                     });
                                 }}
-                                // onKeyDown={(e) => {
-                                //     // Prevent the card from collapsing when pressing Enter
-                                //     e.stopPropagation();
-                                // }}
                                 placeholder="Option 1&#10;Option 2&#10;Option 3"
                                 rows={4}
                             />
@@ -473,10 +469,10 @@ export default function AssessmentBuilder({
                 </Link>
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">
+                        <h1 className="text-3xl font-bold">
                             Assessment Builder
                         </h1>
-                        <p className="text-gray-600 mt-1">
+                        <p className="text-muted-foreground mt-1">
                             {job.title} • {totalQuestions} question
                             {totalQuestions !== 1 ? "s" : ""}
                         </p>
@@ -526,7 +522,7 @@ export default function AssessmentBuilder({
                                                     title: e.target.value,
                                                 })
                                             }
-                                            className="text-lg font-semibold border-none shadow-none px-0 focus-visible:ring-0"
+                                            className="text-lg font-semibold border-none shadow-none px-0 focus-visible:ring-0 pl-4"
                                             placeholder="Section Title"
                                         />
                                     </div>
@@ -538,15 +534,15 @@ export default function AssessmentBuilder({
                                                 deleteSection(section.id)
                                             }
                                         >
-                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                            <Trash2 className="w-4 h-4 text-destructive" />
                                         </Button>
                                     )}
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {section.questions.length === 0 ? (
-                                    <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                                        <p className="text-gray-600 mb-3">
+                                    <div className="text-center py-8 border-2 border-dashed border-border rounded-lg">
+                                        <p className="text-muted-foreground mb-3">
                                             No questions in this section
                                         </p>
                                         <Button
@@ -633,7 +629,7 @@ export default function AssessmentBuilder({
                                                             {question.text ||
                                                                 "Question text..."}
                                                             {question.required && (
-                                                                <span className="text-red-500">
+                                                                <span className="text-destructive">
                                                                     *
                                                                 </span>
                                                             )}
@@ -657,7 +653,7 @@ export default function AssessmentBuilder({
                                                                             key={
                                                                                 i
                                                                             }
-                                                                            className="flex items-center gap-2 text-sm p-2 border rounded hover:bg-gray-50"
+                                                                            className="flex items-center gap-2 text-sm p-2 border border-border rounded hover:bg-accent/50 cursor-pointer"
                                                                         >
                                                                             <input
                                                                                 type="radio"
@@ -692,7 +688,7 @@ export default function AssessmentBuilder({
                                                                             key={
                                                                                 i
                                                                             }
-                                                                            className="flex items-center gap-2 text-sm p-2 border rounded hover:bg-gray-50"
+                                                                            className="flex items-center gap-2 text-sm p-2 border border-border rounded hover:bg-accent/50 cursor-pointer"
                                                                         >
                                                                             <input
                                                                                 type="checkbox"
@@ -741,14 +737,14 @@ export default function AssessmentBuilder({
 
                                                         {question.type ===
                                                             "file" && (
-                                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center text-sm text-gray-500">
+                                                            <div className="border-2 border-dashed border-border rounded-lg p-4 text-center text-sm text-muted-foreground">
                                                                 Click to upload
                                                                 or drag and drop
                                                             </div>
                                                         )}
 
                                                         {question.conditionalOn && (
-                                                            <p className="text-xs text-blue-600 flex items-center gap-1">
+                                                            <p className="text-xs text-primary flex items-center gap-1">
                                                                 <span>⚡</span>
                                                                 Conditional:
                                                                 Shows when
@@ -775,7 +771,7 @@ export default function AssessmentBuilder({
                             )}
 
                             {totalQuestions === 0 && (
-                                <p className="text-sm text-gray-500 text-center py-8">
+                                <p className="text-sm text-muted-foreground text-center py-8">
                                     Add questions to see preview
                                 </p>
                             )}
@@ -789,14 +785,16 @@ export default function AssessmentBuilder({
                         </CardHeader>
                         <CardContent className="space-y-3 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-gray-600">Sections:</span>
+                                <span className="text-muted-foreground">
+                                    Sections:
+                                </span>
                                 <span className="font-medium">
                                     {assessment.sections.length}
                                 </span>
                             </div>
                             <Separator />
                             <div className="flex justify-between">
-                                <span className="text-gray-600">
+                                <span className="text-muted-foreground">
                                     Total Questions:
                                 </span>
                                 <span className="font-medium">
@@ -805,7 +803,7 @@ export default function AssessmentBuilder({
                             </div>
                             <Separator />
                             <div className="flex justify-between">
-                                <span className="text-gray-600">
+                                <span className="text-muted-foreground">
                                     Required Questions:
                                 </span>
                                 <span className="font-medium">
@@ -817,7 +815,7 @@ export default function AssessmentBuilder({
                             </div>
                             <Separator />
                             <div className="flex justify-between">
-                                <span className="text-gray-600">
+                                <span className="text-muted-foreground">
                                     Conditional Questions:
                                 </span>
                                 <span className="font-medium">
@@ -830,7 +828,7 @@ export default function AssessmentBuilder({
                             </div>
                             <Separator />
                             <div className="flex justify-between">
-                                <span className="text-gray-600">
+                                <span className="text-muted-foreground">
                                     Question Types:
                                 </span>
                                 <div className="text-right">
@@ -843,7 +841,7 @@ export default function AssessmentBuilder({
                                     ).map(([type, count]) => (
                                         <div
                                             key={type}
-                                            className="text-xs text-gray-600 capitalize"
+                                            className="text-xs text-muted-foreground capitalize"
                                         >
                                             {type}: {count}
                                         </div>
@@ -854,13 +852,11 @@ export default function AssessmentBuilder({
                     </Card>
 
                     {/* Tips */}
-                    <Card className="border-blue-200 bg-blue-50">
+                    <Card className="border-primary/20 bg-primary/5">
                         <CardHeader>
-                            <CardTitle className="text-sm text-blue-900">
-                                💡 Tips
-                            </CardTitle>
+                            <CardTitle className="text-sm">💡 Tips</CardTitle>
                         </CardHeader>
-                        <CardContent className="text-xs text-blue-800 space-y-2">
+                        <CardContent className="text-xs space-y-2">
                             <p>
                                 • Use conditional questions to create dynamic
                                 assessments

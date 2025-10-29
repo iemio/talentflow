@@ -39,7 +39,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                        <SidebarMenuButton
+                            size="lg"
+                            className="flex items-center justify-center gap-3 w-full"
+                            asChild
+                        >
                             <a href="/">
                                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                                     <ClipboardList className="size-4" />
@@ -48,7 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     <span className="font-semibold">
                                         TalentFlow
                                     </span>
-                                    <span className="text-xs">v1.0.0</span>
+                                    {/* <span className="text-xs">v1.0.0</span> */}
                                 </div>
                             </a>
                         </SidebarMenuButton>
@@ -68,6 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     <SidebarMenuButton
                                         asChild
                                         isActive={isActive}
+                                        className="border-b mb-3 pt-4 pb-4"
                                         tooltip={item.title}
                                     >
                                         <a href={item.url}>

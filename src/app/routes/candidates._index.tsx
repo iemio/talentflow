@@ -50,12 +50,14 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
 
 function CandidateRow({ candidate }: { candidate: any }) {
     const stageColors: Record<string, string> = {
-        applied: "bg-gray-100 text-gray-800",
-        screen: "bg-yellow-100 text-yellow-800",
-        tech: "bg-blue-100 text-blue-800",
-        offer: "bg-purple-100 text-purple-800",
-        hired: "bg-green-100 text-green-800",
-        rejected: "bg-red-100 text-red-800",
+        applied:
+            "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
+        screen: "bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300",
+        tech: "bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300",
+        offer: "bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300",
+        hired: "bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300",
+        rejected:
+            "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300",
     };
 
     const getInitials = (name: string) => {
@@ -70,23 +72,25 @@ function CandidateRow({ candidate }: { candidate: any }) {
     return (
         <Link
             to={`/candidates/${candidate.id}`}
-            className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b"
+            className="flex items-center gap-4 p-4 hover:bg-accent/50 transition-colors border-b border-border"
         >
             <Avatar>
-                <AvatarFallback className="bg-blue-100 text-blue-600">
+                <AvatarFallback className="bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
                     {getInitials(candidate.name)}
                 </AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">
-                <h3 className="font-medium truncate">{candidate.name}</h3>
-                <p className="text-sm text-gray-600 truncate">
+                <h3 className="font-medium truncate text-foreground">
+                    {candidate.name}
+                </h3>
+                <p className="text-sm text-muted-foreground truncate">
                     {candidate.email}
                 </p>
             </div>
 
             <div className="hidden md:block flex-1 min-w-0">
-                <p className="text-sm text-gray-600 truncate">
+                <p className="text-sm text-muted-foreground truncate">
                     {candidate.jobTitle}
                 </p>
             </div>
@@ -95,7 +99,7 @@ function CandidateRow({ candidate }: { candidate: any }) {
                 <Badge className={stageColors[candidate.stage]}>
                     {candidate.stage}
                 </Badge>
-                <span className="text-xs text-gray-500 hidden lg:block">
+                <span className="text-xs text-muted-foreground hidden lg:block">
                     {new Date(candidate.appliedAt).toLocaleDateString()}
                 </span>
             </div>
@@ -155,11 +159,11 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
                             <Users className="w-8 h-8" />
                             Candidates
                         </h1>
-                        <p className="text-gray-600 mt-1">
+                        <p className="text-muted-foreground mt-1">
                             {filteredCandidates.length} candidate
                             {filteredCandidates.length !== 1 ? "s" : ""} found
                         </p>
@@ -179,7 +183,7 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
                     <div className="flex flex-col lg:flex-row gap-4">
                         {/* Search */}
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -228,7 +232,7 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
                                     ? "default"
                                     : "outline"
                             }
-                            className="cursor-pointer hover:bg-blue-50"
+                            className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/20"
                         >
                             {stage.label}
                         </Badge>
@@ -244,11 +248,11 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
                 >
                     {filteredCandidates.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                            <Users className="w-16 h-16 text-gray-300 mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            <Users className="w-16 h-16 text-muted-foreground mb-4" />
+                            <h3 className="text-lg font-medium text-foreground mb-2">
                                 No candidates found
                             </h3>
-                            <p className="text-gray-600">
+                            <p className="text-muted-foreground">
                                 {searchTerm
                                     ? "Try adjusting your search terms"
                                     : "No candidates match the selected filters"}
@@ -287,7 +291,7 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
             </Card>
 
             {/* Stats Footer */}
-            <div className="mt-4 text-sm text-gray-600 text-center">
+            <div className="mt-4 text-sm text-muted-foreground text-center">
                 Showing {filteredCandidates.length} of {loaderData.totalCount}{" "}
                 total candidates
             </div>

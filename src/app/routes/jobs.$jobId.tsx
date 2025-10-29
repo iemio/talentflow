@@ -60,12 +60,23 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
         "rejected",
     ];
     const stageColors: Record<string, string> = {
-        applied: "bg-gray-100 text-gray-800",
-        screen: "bg-yellow-100 text-yellow-800",
-        tech: "bg-blue-100 text-blue-800",
-        offer: "bg-purple-100 text-purple-800",
-        hired: "bg-green-100 text-green-800",
-        rejected: "bg-red-100 text-red-800",
+        applied:
+            "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
+        screen: "bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300",
+        tech: "bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300",
+        offer: "bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300",
+        hired: "bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300",
+        rejected:
+            "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300",
+    };
+
+    const progressBarColors: Record<string, string> = {
+        applied: "bg-gray-500 dark:bg-gray-400",
+        screen: "bg-yellow-500 dark:bg-yellow-400",
+        tech: "bg-blue-500 dark:bg-blue-400",
+        offer: "bg-purple-500 dark:bg-purple-400",
+        hired: "bg-green-500 dark:bg-green-400",
+        rejected: "bg-red-500 dark:bg-red-400",
     };
 
     return (
@@ -81,7 +92,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                 <div className="flex items-start justify-between">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-bold text-gray-900">
+                            <h1 className="text-3xl font-bold text-foreground">
                                 {job.title}
                             </h1>
                             <Badge
@@ -95,10 +106,10 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                                 {job.status}
                             </Badge>
                         </div>
-                        <p className="text-gray-600">/{job.slug}</p>
+                        <p className="text-muted-foreground">/{job.slug}</p>
                         <div className="flex items-center gap-2 mt-3">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
                                 Created{" "}
                                 {new Date(job.createdAt).toLocaleDateString()}
                             </span>
@@ -128,7 +139,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                 <Card>
                     <CardHeader className="pb-3">
                         <CardDescription>Total Candidates</CardDescription>
-                        <CardTitle className="text-3xl">
+                        <CardTitle className="text-3xl text-foreground">
                             {stats.total}
                         </CardTitle>
                     </CardHeader>
@@ -136,7 +147,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                 <Card>
                     <CardHeader className="pb-3">
                         <CardDescription>In Progress</CardDescription>
-                        <CardTitle className="text-3xl text-blue-600">
+                        <CardTitle className="text-3xl text-blue-600 dark:text-blue-400">
                             {stats.inProgress}
                         </CardTitle>
                     </CardHeader>
@@ -144,7 +155,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                 <Card>
                     <CardHeader className="pb-3">
                         <CardDescription>Hired</CardDescription>
-                        <CardTitle className="text-3xl text-green-600">
+                        <CardTitle className="text-3xl text-green-600 dark:text-green-400">
                             {stats.hired}
                         </CardTitle>
                     </CardHeader>
@@ -152,7 +163,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                 <Card>
                     <CardHeader className="pb-3">
                         <CardDescription>Rejected</CardDescription>
-                        <CardTitle className="text-3xl text-red-600">
+                        <CardTitle className="text-3xl text-red-600 dark:text-red-400">
                             {stats.rejected}
                         </CardTitle>
                     </CardHeader>
@@ -168,10 +179,10 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                     <CardContent className="space-y-4">
                         {job.description && (
                             <div>
-                                <h3 className="font-semibold mb-2">
+                                <h3 className="font-semibold mb-2 text-foreground">
                                     Description
                                 </h3>
-                                <p className="text-gray-700 whitespace-pre-wrap">
+                                <p className="text-muted-foreground whitespace-pre-wrap">
                                     {job.description}
                                 </p>
                             </div>
@@ -180,7 +191,9 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                         <Separator />
 
                         <div>
-                            <h3 className="font-semibold mb-3">Tags</h3>
+                            <h3 className="font-semibold mb-3 text-foreground">
+                                Tags
+                            </h3>
                             <div className="flex flex-wrap gap-2">
                                 {job.tags.map((tag: any) => (
                                     <Badge key={tag} variant="secondary">
@@ -193,7 +206,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                         <Separator />
 
                         <div>
-                            <h3 className="font-semibold mb-3">
+                            <h3 className="font-semibold mb-3 text-foreground">
                                 Candidate Pipeline
                             </h3>
                             <div className="space-y-2">
@@ -207,19 +220,17 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                                     return (
                                         <div key={stage}>
                                             <div className="flex items-center justify-between mb-1">
-                                                <span className="text-sm font-medium capitalize">
+                                                <span className="text-sm font-medium capitalize text-foreground">
                                                     {stage}
                                                 </span>
-                                                <span className="text-sm text-gray-600">
+                                                <span className="text-sm text-muted-foreground">
                                                     {count} (
                                                     {percentage.toFixed(0)}%)
                                                 </span>
                                             </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div className="w-full bg-muted rounded-full h-2">
                                                 <div
-                                                    className={`h-2 rounded-full ${stageColors[
-                                                        stage
-                                                    ]?.replace("100", "500")}`}
+                                                    className={`h-2 rounded-full ${progressBarColors[stage]}`}
                                                     style={{
                                                         width: `${percentage}%`,
                                                     }}
@@ -281,17 +292,23 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                         <Separator />
 
                         <div className="pt-2">
-                            <h4 className="text-sm font-semibold mb-3">
+                            <h4 className="text-sm font-semibold mb-3 text-foreground">
                                 Assessment Status
                             </h4>
                             <div
                                 className={`p-3 rounded-lg ${
                                     hasAssessment
-                                        ? "bg-green-50 border border-green-200"
-                                        : "bg-yellow-50 border border-yellow-200"
+                                        ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800"
+                                        : "bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800"
                                 }`}
                             >
-                                <p className="text-sm">
+                                <p
+                                    className={`text-sm ${
+                                        hasAssessment
+                                            ? "text-green-800 dark:text-green-300"
+                                            : "text-yellow-800 dark:text-yellow-300"
+                                    }`}
+                                >
                                     {hasAssessment
                                         ? "✓ Assessment configured for this job"
                                         : "⚠ No assessment set up yet"}
@@ -302,29 +319,33 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                         <Separator />
 
                         <div className="pt-2">
-                            <h4 className="text-sm font-semibold mb-2">
+                            <h4 className="text-sm font-semibold mb-2 text-foreground">
                                 Job Information
                             </h4>
                             <dl className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-600">Status:</dt>
-                                    <dd className="font-medium capitalize">
+                                    <dt className="text-muted-foreground">
+                                        Status:
+                                    </dt>
+                                    <dd className="font-medium capitalize text-foreground">
                                         {job.status}
                                     </dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-600">Created:</dt>
-                                    <dd className="font-medium">
+                                    <dt className="text-muted-foreground">
+                                        Created:
+                                    </dt>
+                                    <dd className="font-medium text-foreground">
                                         {new Date(
                                             job.createdAt
                                         ).toLocaleDateString()}
                                     </dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-600">
+                                    <dt className="text-muted-foreground">
                                         Last Updated:
                                     </dt>
-                                    <dd className="font-medium">
+                                    <dd className="font-medium text-foreground">
                                         {new Date(
                                             job.updatedAt
                                         ).toLocaleDateString()}
@@ -357,14 +378,14 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                                     <Link
                                         key={candidate.id}
                                         to={`/candidates/${candidate.id}`}
-                                        className="block p-4 rounded-lg border hover:bg-gray-50 transition-colors"
+                                        className="block p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h4 className="font-medium">
+                                                <h4 className="font-medium text-foreground">
                                                     {candidate.name}
                                                 </h4>
-                                                <p className="text-sm text-gray-600">
+                                                <p className="text-sm text-muted-foreground">
                                                     {candidate.email}
                                                 </p>
                                             </div>

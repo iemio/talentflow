@@ -118,8 +118,8 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
                         Back to Job
                     </Button>
                 </Link>
-                <h1 className="text-3xl font-bold text-gray-900">Edit Job</h1>
-                <p className="text-gray-600 mt-1">
+                <h1 className="text-3xl font-bold text-foreground">Edit Job</h1>
+                <p className="text-muted-foreground mt-1">
                     Update job details and settings
                 </p>
             </div>
@@ -137,7 +137,9 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
                         <div className="space-y-2">
                             <Label htmlFor="title">
                                 Job Title{" "}
-                                <span className="text-red-500">*</span>
+                                <span className="text-red-500 dark:text-red-400">
+                                    *
+                                </span>
                             </Label>
                             <Input
                                 id="title"
@@ -146,10 +148,14 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
                                     handleTitleChange(e.target.value)
                                 }
                                 placeholder="Senior React Developer"
-                                className={errors.title ? "border-red-500" : ""}
+                                className={
+                                    errors.title
+                                        ? "border-red-500 dark:border-red-400"
+                                        : ""
+                                }
                             />
                             {errors.title && (
-                                <p className="text-sm text-red-500">
+                                <p className="text-sm text-red-500 dark:text-red-400">
                                     {errors.title}
                                 </p>
                             )}
@@ -158,10 +164,15 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
                         {/* Slug */}
                         <div className="space-y-2">
                             <Label htmlFor="slug">
-                                Slug <span className="text-red-500">*</span>
+                                Slug{" "}
+                                <span className="text-red-500 dark:text-red-400">
+                                    *
+                                </span>
                             </Label>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500">/</span>
+                                <span className="text-sm text-muted-foreground">
+                                    /
+                                </span>
                                 <Input
                                     id="slug"
                                     value={formData.slug}
@@ -173,16 +184,18 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
                                     }
                                     placeholder="senior-react-developer"
                                     className={
-                                        errors.slug ? "border-red-500" : ""
+                                        errors.slug
+                                            ? "border-red-500 dark:border-red-400"
+                                            : ""
                                     }
                                 />
                             </div>
                             {errors.slug && (
-                                <p className="text-sm text-red-500">
+                                <p className="text-sm text-red-500 dark:text-red-400">
                                     {errors.slug}
                                 </p>
                             )}
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                                 URL-friendly identifier for this job (lowercase,
                                 numbers, and hyphens only)
                             </p>
@@ -204,7 +217,7 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
                                 rows={8}
                                 className="resize-none"
                             />
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                                 Provide a comprehensive description of the role,
                                 responsibilities, and requirements
                             </p>
@@ -224,7 +237,7 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
                                 }
                                 placeholder="remote, full-time, senior, react"
                             />
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                                 Comma-separated tags to categorize this job
                                 (e.g., remote, full-time, senior)
                             </p>
@@ -244,12 +257,12 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
                                             | "archived",
                                     })
                                 }
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full border border-border bg-background text-foreground rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
                             >
                                 <option value="active">Active</option>
                                 <option value="archived">Archived</option>
                             </select>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                                 Active jobs are visible to candidates, archived
                                 jobs are hidden
                             </p>
@@ -281,9 +294,11 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
             </form>
 
             {/* Danger Zone */}
-            <Card className="mt-8 border-red-200">
+            <Card className="mt-8 border-red-200 dark:border-red-900">
                 <CardHeader>
-                    <CardTitle className="text-red-600">Danger Zone</CardTitle>
+                    <CardTitle className="text-red-600 dark:text-red-400">
+                        Danger Zone
+                    </CardTitle>
                     <CardDescription>
                         Irreversible and destructive actions
                     </CardDescription>
@@ -291,8 +306,10 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
                 <CardContent>
                     <div className="flex items-center justify-between">
                         <div>
-                            <h4 className="font-medium">Archive this job</h4>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <h4 className="font-medium text-foreground">
+                                Archive this job
+                            </h4>
+                            <p className="text-sm text-muted-foreground mt-1">
                                 This will hide the job from candidates but
                                 preserve all data
                             </p>

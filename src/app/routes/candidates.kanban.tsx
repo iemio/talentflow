@@ -40,12 +40,28 @@ interface KanbanColumn {
 }
 
 const columns: KanbanColumn[] = [
-    { id: "applied", title: "Applied", color: "bg-gray-100" },
-    { id: "screen", title: "Screening", color: "bg-yellow-100" },
-    { id: "tech", title: "Technical", color: "bg-blue-100" },
-    { id: "offer", title: "Offer", color: "bg-purple-100" },
-    { id: "hired", title: "Hired", color: "bg-green-100" },
-    { id: "rejected", title: "Rejected", color: "bg-red-100" },
+    { id: "applied", title: "Applied", color: "bg-gray-100 dark:bg-gray-800" },
+    {
+        id: "screen",
+        title: "Screening",
+        color: "bg-yellow-100 dark:bg-yellow-950/40",
+    },
+    {
+        id: "tech",
+        title: "Technical",
+        color: "bg-blue-100 dark:bg-blue-950/40",
+    },
+    {
+        id: "offer",
+        title: "Offer",
+        color: "bg-purple-100 dark:bg-purple-950/40",
+    },
+    { id: "hired", title: "Hired", color: "bg-green-100 dark:bg-green-950/40" },
+    {
+        id: "rejected",
+        title: "Rejected",
+        color: "bg-red-100 dark:bg-red-950/40",
+    },
 ];
 
 function CandidateCard({
@@ -74,24 +90,24 @@ function CandidateCard({
                 <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                         <Avatar className="w-10 h-10">
-                            <AvatarFallback className="bg-blue-100 text-blue-600 text-sm">
+                            <AvatarFallback className="bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-sm">
                                 {getInitials(candidate.name)}
                             </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate">
+                            <h3 className="font-medium text-sm truncate text-foreground">
                                 {candidate.name}
                             </h3>
-                            <div className="flex items-center gap-1 mt-1 text-xs text-gray-600">
+                            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                                 <Mail className="w-3 h-3" />
                                 <span className="truncate">
                                     {candidate.email}
                                 </span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-2 truncate">
+                            <p className="text-xs text-muted-foreground mt-2 truncate">
                                 {candidate.jobTitle}
                             </p>
-                            <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                            <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
                                 <Calendar className="w-3 h-3" />
                                 <span>
                                     {new Date(
@@ -183,10 +199,10 @@ export default function CandidatesKanban({ loaderData }: Route.ComponentProps) {
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">
+                        <h1 className="text-3xl font-bold text-foreground">
                             Candidate Pipeline
                         </h1>
-                        <p className="text-gray-600 mt-1">
+                        <p className="text-muted-foreground mt-1">
                             Drag and drop candidates between stages
                         </p>
                     </div>
@@ -200,7 +216,7 @@ export default function CandidatesKanban({ loaderData }: Route.ComponentProps) {
 
                 {/* Search */}
                 <div className="relative max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -226,19 +242,21 @@ export default function CandidatesKanban({ loaderData }: Route.ComponentProps) {
                         >
                             <Card
                                 className={`flex-1 ${
-                                    isDraggedOver ? "ring-2 ring-blue-500" : ""
+                                    isDraggedOver
+                                        ? "ring-2 ring-blue-500 dark:ring-blue-400"
+                                        : ""
                                 }`}
                             >
                                 <CardHeader
-                                    className={`${column.color} border-b`}
+                                    className={`${column.color} border-b border-border`}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <h2 className="font-semibold text-sm">
+                                        <h2 className="font-semibold text-sm text-foreground">
                                             {column.title}
                                         </h2>
                                         <Badge
                                             variant="secondary"
-                                            className="bg-white"
+                                            className="bg-white dark:bg-gray-900"
                                         >
                                             {candidates.length}
                                         </Badge>
@@ -246,7 +264,7 @@ export default function CandidatesKanban({ loaderData }: Route.ComponentProps) {
                                 </CardHeader>
                                 <CardContent className="p-4 min-h-[400px] max-h-[calc(100vh-300px)] overflow-y-auto">
                                     {candidates.length === 0 ? (
-                                        <div className="text-center text-gray-400 text-sm mt-8">
+                                        <div className="text-center text-muted-foreground text-sm mt-8">
                                             No candidates
                                         </div>
                                     ) : (
@@ -266,7 +284,7 @@ export default function CandidatesKanban({ loaderData }: Route.ComponentProps) {
             </div>
 
             {/* Stats */}
-            <div className="mt-6 text-sm text-gray-600 text-center">
+            <div className="mt-6 text-sm text-muted-foreground text-center">
                 Total candidates: {filteredCandidates.length}
             </div>
         </div>

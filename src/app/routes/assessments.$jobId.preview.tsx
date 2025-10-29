@@ -175,10 +175,10 @@ export default function AssessmentPreview({
                     </Button>
                 </Link>
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        {job.title}
-                    </h1>
-                    <p className="text-gray-600 mt-1">Assessment Preview</p>
+                    <h1 className="text-3xl font-bold">{job.title}</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Assessment Preview
+                    </p>
                 </div>
 
                 {/* Progress */}
@@ -188,7 +188,7 @@ export default function AssessmentPreview({
                             <span className="text-sm font-medium">
                                 Progress
                             </span>
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-muted-foreground">
                                 {answeredCount} of {allQuestions.length}{" "}
                                 questions
                             </span>
@@ -199,9 +199,9 @@ export default function AssessmentPreview({
             </div>
 
             {/* Preview Mode Alert */}
-            <Alert className="mb-6 border-blue-200 bg-blue-50">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
+            <Alert className="mb-6 border-primary/20 bg-primary/5">
+                <AlertCircle className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-primary">
                     This is a preview mode. Fill out the form to test validation
                     and conditional logic.
                 </AlertDescription>
@@ -229,7 +229,7 @@ export default function AssessmentPreview({
                                         <Label className="flex items-start gap-1">
                                             <span>{question.text}</span>
                                             {question.required && (
-                                                <span className="text-red-500">
+                                                <span className="text-destructive">
                                                     *
                                                 </span>
                                             )}
@@ -242,7 +242,7 @@ export default function AssessmentPreview({
                                                     (option: any) => (
                                                         <label
                                                             key={option}
-                                                            className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                                                            className="flex items-center gap-2 p-3 border border-border rounded-lg cursor-pointer hover:bg-accent/50"
                                                         >
                                                             <input
                                                                 type="radio"
@@ -264,7 +264,7 @@ export default function AssessmentPreview({
                                                                         question
                                                                     )
                                                                 }
-                                                                className="text-blue-600"
+                                                                className="text-primary"
                                                             />
                                                             <span>
                                                                 {option}
@@ -282,7 +282,7 @@ export default function AssessmentPreview({
                                                     (option: any) => (
                                                         <label
                                                             key={option}
-                                                            className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                                                            className="flex items-center gap-2 p-3 border border-border rounded-lg cursor-pointer hover:bg-accent/50"
                                                         >
                                                             <input
                                                                 type="checkbox"
@@ -320,7 +320,7 @@ export default function AssessmentPreview({
                                                                         question
                                                                     );
                                                                 }}
-                                                                className="text-blue-600 rounded"
+                                                                className="text-primary rounded"
                                                             />
                                                             <span>
                                                                 {option}
@@ -353,12 +353,12 @@ export default function AssessmentPreview({
                                                     }
                                                     className={
                                                         errors[question.id]
-                                                            ? "border-red-500"
+                                                            ? "border-destructive"
                                                             : ""
                                                     }
                                                 />
                                                 {question.maxLength && (
-                                                    <p className="text-xs text-gray-500 mt-1">
+                                                    <p className="text-xs text-muted-foreground mt-1">
                                                         {
                                                             (
                                                                 responses[
@@ -396,12 +396,12 @@ export default function AssessmentPreview({
                                                     }
                                                     className={
                                                         errors[question.id]
-                                                            ? "border-red-500"
+                                                            ? "border-destructive"
                                                             : ""
                                                     }
                                                 />
                                                 {question.maxLength && (
-                                                    <p className="text-xs text-gray-500 mt-1">
+                                                    <p className="text-xs text-muted-foreground mt-1">
                                                         {
                                                             (
                                                                 responses[
@@ -445,7 +445,7 @@ export default function AssessmentPreview({
                                                     max={question.maxValue}
                                                     className={
                                                         errors[question.id]
-                                                            ? "border-red-500"
+                                                            ? "border-destructive"
                                                             : ""
                                                     }
                                                 />
@@ -453,7 +453,7 @@ export default function AssessmentPreview({
                                                     undefined ||
                                                     question.maxValue !==
                                                         undefined) && (
-                                                    <p className="text-xs text-gray-500 mt-1">
+                                                    <p className="text-xs text-muted-foreground mt-1">
                                                         Range:{" "}
                                                         {question.minValue ??
                                                             "−∞"}{" "}
@@ -467,7 +467,7 @@ export default function AssessmentPreview({
 
                                         {/* File Upload */}
                                         {question.type === "file" && (
-                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                                            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
                                                 <input
                                                     type="file"
                                                     className="hidden"
@@ -488,13 +488,13 @@ export default function AssessmentPreview({
                                                     htmlFor={question.id}
                                                     className="cursor-pointer"
                                                 >
-                                                    <div className="text-gray-600">
+                                                    <div className="text-muted-foreground">
                                                         {responses[
                                                             question.id
                                                         ] ? (
                                                             <div className="flex items-center justify-center gap-2">
-                                                                <CheckCircle className="w-5 h-5 text-green-600" />
-                                                                <span className="font-medium">
+                                                                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                                                <span className="font-medium text-foreground">
                                                                     {
                                                                         responses[
                                                                             question
@@ -525,7 +525,7 @@ export default function AssessmentPreview({
 
                                         {/* Error Message */}
                                         {errors[question.id] && (
-                                            <p className="text-sm text-red-500 flex items-center gap-1">
+                                            <p className="text-sm text-destructive flex items-center gap-1">
                                                 <AlertCircle className="w-4 h-4" />
                                                 {errors[question.id]}
                                             </p>
@@ -533,7 +533,7 @@ export default function AssessmentPreview({
 
                                         {/* Conditional Indicator */}
                                         {question.conditionalOn && (
-                                            <p className="text-xs text-blue-600 flex items-center gap-1">
+                                            <p className="text-xs text-primary flex items-center gap-1">
                                                 ⚡ This question appeared based
                                                 on your previous answer
                                             </p>
@@ -549,7 +549,7 @@ export default function AssessmentPreview({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-muted-foreground">
                                 {
                                     allQuestions.filter(
                                         (q: any) =>
