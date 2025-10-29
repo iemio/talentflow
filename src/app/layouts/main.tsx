@@ -8,7 +8,7 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { Outlet, useLocation } from "react-router";
+import { useLocation } from "react-router";
 import {
     SidebarInset,
     SidebarProvider,
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import React from "react";
+import AnimatedOutlet from "@/components/animated-outlet";
 
 const routeTitles: Record<string, { title: string; parent?: string }> = {
     "/": { title: "Dashboard" },
@@ -27,7 +28,7 @@ export default function MainLayout() {
     const location = useLocation();
 
     // Get current route info
-    const currentRoute = routeTitles[location.pathname] || { title: "Page" };
+    // const currentRoute = routeTitles[location.pathname] || { title: "Page" };
 
     // Function to generate breadcrumbs based on path
     const getBreadcrumbs = () => {
@@ -99,7 +100,7 @@ export default function MainLayout() {
                     </div>
                 </header>
                 <div className="flex flex-1 flex-col">
-                    <Outlet />
+                    <AnimatedOutlet />
                 </div>
             </SidebarInset>
         </SidebarProvider>
