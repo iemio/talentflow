@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Search, Filter, Users } from "lucide-react";
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
@@ -97,9 +104,12 @@ function CandidateRow({ candidate }: { candidate: any }) {
 }
 
 export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const parentRef = useRef<HTMLDivElement>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [stageFilter, setStageFilter] = useState(
+        searchParams.get("stage") || "all"
+    );
 
     // Client-side filtering for name/email search
     const filteredCandidates = useMemo(() => {
@@ -131,6 +141,13 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
     ];
 
     const currentStage = searchParams.get("stage") || "all";
+
+    const handleStageChange = (value: string) => {
+        setStageFilter(value);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("stage", value);
+        setSearchParams(newParams);
+    };
 
     return (
         <div className="p-8">
@@ -172,25 +189,28 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
                         </div>
 
                         {/* Stage Filter */}
-                        <Form className="flex gap-2">
-                            <select
-                                name="stage"
-                                defaultValue={currentStage}
-                                className="border border-gray-300 rounded-md px-4 py-2 min-w-[180px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        <div className="flex gap-2">
+                            <Select
+                                value={stageFilter}
+                                onValueChange={handleStageChange}
                             >
-                                {stages.map((stage) => (
-                                    <option
-                                        key={stage.value}
-                                        value={stage.value}
-                                    >
-                                        {stage.label}
-                                        {stage.count !== undefined &&
-                                            ` (${stage.count})`}
-                                    </option>
-                                ))}
-                            </select>
-                            <Button type="submit">Apply</Button>
-                        </Form>
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder="Select stage" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {stages.map((stage) => (
+                                        <SelectItem
+                                            key={stage.value}
+                                            value={stage.value}
+                                        >
+                                            {stage.label}
+                                            {stage.count !== undefined &&
+                                                ` (${stage.count})`}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

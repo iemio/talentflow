@@ -31,6 +31,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
     Plus,
     GripVertical,
     Edit,
@@ -308,22 +315,27 @@ function JobFormDialog({
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="status">Status</Label>
-                            <select
-                                id="status"
+                            <Select
                                 value={formData.status}
-                                onChange={(e) =>
+                                onValueChange={(value) =>
                                     setFormData({
                                         ...formData,
-                                        status: e.target.value as
-                                            | "active"
-                                            | "archived",
+                                        status: value as "active" | "archived",
                                     })
                                 }
-                                className="w-full border border-gray-300 rounded-md px-3 py-2"
                             >
-                                <option value="active">Active</option>
-                                <option value="archived">Archived</option>
-                            </select>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">
+                                        Active
+                                    </SelectItem>
+                                    <SelectItem value="archived">
+                                        Archived
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <DialogFooter>
@@ -355,6 +367,9 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
     const [activeId, setActiveId] = useState<string | null>(null);
     const [optimisticJobs, setOptimisticJobs] = useState(loaderData.data);
     const [isReordering, setIsReordering] = useState(false);
+    const [statusFilter, setStatusFilter] = useState(
+        searchParams.get("status") || "all"
+    );
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -418,53 +433,6 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
         setActiveId(event.active.id);
     };
 
-    // const handleDragEnd = async (event: DragEndEvent) => {
-    //     const { active, over } = event;
-    //     setActiveId(null);
-
-    //     if (!over || active.id === over.id) return;
-
-    //     const oldIndex = optimisticJobs.findIndex(
-    //         (j: Job) => j.id === active.id
-    //     );
-    //     const newIndex = optimisticJobs.findIndex((j: Job) => j.id === over.id);
-
-    //     if (oldIndex === -1 || newIndex === -1) return;
-
-    //     // Optimistic update
-    //     const newJobs = [...optimisticJobs];
-    //     const [movedJob] = newJobs.splice(oldIndex, 1);
-    //     newJobs.splice(newIndex, 0, movedJob);
-    //     setOptimisticJobs(newJobs);
-    //     setIsReordering(true);
-
-    //     try {
-    //         const response = await fetch(`/api/jobs/${active.id}/reorder`, {
-    //             method: "PATCH",
-    //             headers: { "Content-Type": "application/json" },
-    //             body: JSON.stringify({
-    //                 fromOrder: optimisticJobs[oldIndex].order,
-    //                 toOrder: optimisticJobs[newIndex].order,
-    //             }),
-    //         });
-
-    //         if (!response.ok) {
-    //             throw new Error("Reorder failed");
-    //         }
-
-    //         toast.success("Jobs reordered successfully");
-
-    //         // Reload the page to get fresh data with updated order
-    //         // navigate(0); // This reloads the current route
-    //     } catch (error) {
-    //         // Rollback on failure
-    //         setOptimisticJobs(loaderData.data);
-    //         toast.error("Failed to reorder jobs. Changes reverted.");
-    //     } finally {
-    //         setIsReordering(false);
-    //     }
-    // };
-
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveId(null);
@@ -478,7 +446,6 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
 
         if (oldIndex === -1 || newIndex === -1) return;
 
-        // FIX: Capture order values BEFORE optimistic update
         const fromOrder = optimisticJobs[oldIndex].order;
         const toOrder = optimisticJobs[newIndex].order;
 
@@ -504,9 +471,6 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
             }
 
             toast.success("Jobs reordered successfully");
-
-            // FIX: Reload the current route to get fresh data with updated order
-            // navigate(0);
         } catch (error) {
             // Rollback on failure
             setOptimisticJobs(loaderData.data);
@@ -514,6 +478,14 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
         } finally {
             setIsReordering(false);
         }
+    };
+
+    const handleStatusChange = (value: string) => {
+        setStatusFilter(value);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("status", value);
+        newParams.set("page", "1"); // Reset to first page
+        setSearchParams(newParams);
     };
 
     const activeJob = optimisticJobs.find((j: Job) => j.id === activeId);
@@ -556,15 +528,21 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                             defaultValue={searchParams.get("search") || ""}
                             className="flex-1"
                         />
-                        <select
-                            name="status"
-                            defaultValue={searchParams.get("status") || "all"}
-                            className="border border-gray-300 rounded-md px-3 py-2"
+                        <Select
+                            value={statusFilter}
+                            onValueChange={handleStatusChange}
                         >
-                            <option value="all">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="archived">Archived</option>
-                        </select>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="archived">
+                                    Archived
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                         <Button type="submit">Filter</Button>
                     </Form>
                 </CardContent>
@@ -645,7 +623,6 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                 </DndContext>
             )}
 
-            {/* Pagination - UPDATED */}
             {loaderData.meta && loaderData.meta.totalPages > 1 && (
                 <div className="flex items-center justify-center gap-4 mt-6">
                     <Button

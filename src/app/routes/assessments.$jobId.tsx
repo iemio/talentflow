@@ -14,6 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
     ArrowLeft,
     Plus,
     Trash2,
@@ -128,22 +135,29 @@ function QuestionEditor({
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label>Question Type</Label>
-                            <select
+                            <Select
                                 value={question.type}
-                                onChange={(e) =>
+                                onValueChange={(value) =>
                                     onUpdate({
                                         ...question,
-                                        type: e.target.value as any,
+                                        type: value as any,
                                     })
                                 }
-                                className="w-full border border-gray-300 rounded-md px-3 py-2"
                             >
-                                {questionTypes.map((type) => (
-                                    <option key={type.value} value={type.value}>
-                                        {type.label}
-                                    </option>
-                                ))}
-                            </select>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {questionTypes.map((type) => (
+                                        <SelectItem
+                                            key={type.value}
+                                            value={type.value}
+                                        >
+                                            {type.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-2">
@@ -179,6 +193,10 @@ function QuestionEditor({
                                             .filter(Boolean),
                                     })
                                 }
+                                onKeyDown={(e) => {
+                                    // Prevent the card from collapsing when pressing Enter
+                                    e.stopPropagation();
+                                }}
                                 placeholder="Option 1&#10;Option 2&#10;Option 3"
                                 rows={4}
                             />
@@ -246,10 +264,12 @@ function QuestionEditor({
                     <div className="space-y-2">
                         <Label>Show Conditionally</Label>
                         <div className="grid grid-cols-2 gap-2">
-                            <select
-                                value={question.conditionalOn?.questionId || ""}
-                                onChange={(e) => {
-                                    if (!e.target.value) {
+                            <Select
+                                value={
+                                    question.conditionalOn?.questionId || "none"
+                                }
+                                onValueChange={(value) => {
+                                    if (value === "none") {
                                         onUpdate({
                                             ...question,
                                             conditionalOn: undefined,
@@ -258,7 +278,7 @@ function QuestionEditor({
                                         onUpdate({
                                             ...question,
                                             conditionalOn: {
-                                                questionId: e.target.value,
+                                                questionId: value,
                                                 value:
                                                     question.conditionalOn
                                                         ?.value || "",
@@ -266,17 +286,23 @@ function QuestionEditor({
                                         });
                                     }
                                 }}
-                                className="border border-gray-300 rounded-md px-3 py-2"
                             >
-                                <option value="">Always show</option>
-                                {allQuestions
-                                    .filter((q) => q.id !== question.id)
-                                    .map((q) => (
-                                        <option key={q.id} value={q.id}>
-                                            When: {q.text.slice(0, 30)}...
-                                        </option>
-                                    ))}
-                            </select>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Always show" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">
+                                        Always show
+                                    </SelectItem>
+                                    {allQuestions
+                                        .filter((q) => q.id !== question.id)
+                                        .map((q) => (
+                                            <SelectItem key={q.id} value={q.id}>
+                                                When: {q.text.slice(0, 30)}...
+                                            </SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
                             {question.conditionalOn && (
                                 <Input
                                     value={question.conditionalOn.value}
