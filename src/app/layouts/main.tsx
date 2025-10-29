@@ -8,14 +8,59 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import {
     SidebarInset,
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { ThemeToggle } from "@/components/theme-toggle";
+import React from "react";
 
-export default function Page() {
+const routeTitles: Record<string, { title: string; parent?: string }> = {
+    "/": { title: "Dashboard" },
+    "/jobs": { title: "Jobs" },
+    "/candidates": { title: "Candidates" },
+};
+
+export default function MainLayout() {
+    const location = useLocation();
+
+    // Get current route info
+    const currentRoute = routeTitles[location.pathname] || { title: "Page" };
+
+    // Function to generate breadcrumbs based on path
+    const getBreadcrumbs = () => {
+        const path = location.pathname;
+
+        // Home/Dashboard
+        if (path === "/") {
+            return [{ title: "Dashboard", href: "/", isLast: true }];
+        }
+
+        // Other routes
+        const segments = path.split("/").filter(Boolean);
+        const breadcrumbs = [{ title: "Dashboard", href: "/", isLast: false }];
+
+        let currentPath = "";
+        segments.forEach((segment, index) => {
+            currentPath += `/${segment}`;
+            const isLast = index === segments.length - 1;
+            const title =
+                routeTitles[currentPath]?.title ||
+                segment.charAt(0).toUpperCase() + segment.slice(1);
+            breadcrumbs.push({
+                title,
+                href: currentPath,
+                isLast,
+            });
+        });
+
+        return breadcrumbs;
+    };
+
+    const breadcrumbs = getBreadcrumbs();
+
     return (
         <SidebarProvider
             style={
@@ -26,35 +71,36 @@ export default function Page() {
         >
             <AppSidebar />
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 px-4">
+                <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b">
                     <SidebarTrigger className="-ml-1" />
-                    <Separator
-                        orientation="vertical"
-                        className="mr-2 data-[orientation=vertical]:h-4"
-                    />
+                    <Separator orientation="vertical" className="mr-2 h-4" />
                     <Breadcrumb>
                         <BreadcrumbList>
-                            <BreadcrumbItem className="hidden md:block">
-                                <BreadcrumbLink href="#">
-                                    Building Your Application
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator className="hidden md:block" />
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                            </BreadcrumbItem>
+                            {breadcrumbs.map((crumb, index) => (
+                                <React.Fragment key={crumb.href}>
+                                    {index > 0 && <BreadcrumbSeparator />}
+                                    <BreadcrumbItem>
+                                        {crumb.isLast ? (
+                                            <BreadcrumbPage>
+                                                {crumb.title}
+                                            </BreadcrumbPage>
+                                        ) : (
+                                            <BreadcrumbLink href={crumb.href}>
+                                                {crumb.title}
+                                            </BreadcrumbLink>
+                                        )}
+                                    </BreadcrumbItem>
+                                </React.Fragment>
+                            ))}
                         </BreadcrumbList>
                     </Breadcrumb>
-                </header>
-                {/* <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-                    <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                        <div className="bg-muted/50 aspect-video rounded-xl" />
-                        <div className="bg-muted/50 aspect-video rounded-xl" />
-                        <div className="bg-muted/50 aspect-video rounded-xl" />
+                    <div className="ml-auto">
+                        <ThemeToggle />
                     </div>
-                    <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
-                </div> */}
-                <Outlet />
+                </header>
+                <div className="flex flex-1 flex-col">
+                    <Outlet />
+                </div>
             </SidebarInset>
         </SidebarProvider>
     );

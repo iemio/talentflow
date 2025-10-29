@@ -185,18 +185,17 @@ function QuestionEditor({
                             <Label>Options (one per line)</Label>
                             <Textarea
                                 value={question.options?.join("\n") || ""}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                    const lines = e.target.value.split("\n");
                                     onUpdate({
                                         ...question,
-                                        options: e.target.value
-                                            .split("\n")
-                                            .filter(Boolean),
-                                    })
-                                }
-                                onKeyDown={(e) => {
-                                    // Prevent the card from collapsing when pressing Enter
-                                    e.stopPropagation();
+                                        options: lines,
+                                    });
                                 }}
+                                // onKeyDown={(e) => {
+                                //     // Prevent the card from collapsing when pressing Enter
+                                //     e.stopPropagation();
+                                // }}
                                 placeholder="Option 1&#10;Option 2&#10;Option 3"
                                 rows={4}
                             />

@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const links: Route.LinksFunction = () => [
     { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -37,8 +38,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Links />
             </head>
             <body>
-                {children}
-                <Toaster />
+                <ThemeProvider
+                    defaultTheme="system"
+                    storageKey="talentflow-ui-theme"
+                >
+                    {children}
+                    <Toaster />
+                </ThemeProvider>
                 <ScrollRestoration />
                 <Scripts />
             </body>
