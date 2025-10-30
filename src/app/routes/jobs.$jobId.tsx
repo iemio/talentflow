@@ -12,44 +12,135 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Edit, Users, ClipboardList, Calendar } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from "react";
 
+// Non-blocking loader
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const jobId = params.jobId;
 
-    const [job, candidates, assessment] = await Promise.all([
+    const dataPromise = Promise.all([
         db.jobs.get(jobId),
         db.candidates.where("jobId").equals(jobId).toArray(),
         db.assessments.where("jobId").equals(jobId).first(),
-    ]);
+    ]).then(([job, candidates, assessment]) => {
+        if (!job) {
+            throw new Response("Job not found", { status: 404 });
+        }
 
-    if (!job) {
-        throw new Response("Job not found", { status: 404 });
-    }
+        // Group candidates by stage
+        const candidatesByStage = candidates.reduce((acc, candidate) => {
+            acc[candidate.stage] = (acc[candidate.stage] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
 
-    // Group candidates by stage
-    const candidatesByStage = candidates.reduce((acc, candidate) => {
-        acc[candidate.stage] = (acc[candidate.stage] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
+        return {
+            job,
+            candidates,
+            candidatesByStage,
+            hasAssessment: !!assessment,
+            stats: {
+                total: candidates.length,
+                hired: candidatesByStage.hired || 0,
+                inProgress: Object.entries(candidatesByStage)
+                    .filter(([stage]) => !["hired", "rejected"].includes(stage))
+                    .reduce((sum, [, count]) => sum + count, 0),
+                rejected: candidatesByStage.rejected || 0,
+            },
+        };
+    });
 
-    return {
-        job,
-        candidates,
-        candidatesByStage,
-        hasAssessment: !!assessment,
-        stats: {
-            total: candidates.length,
-            hired: candidatesByStage.hired || 0,
-            inProgress: Object.entries(candidatesByStage)
-                .filter(([stage]) => !["hired", "rejected"].includes(stage))
-                .reduce((sum, [, count]) => sum + count, 0),
-            rejected: candidatesByStage.rejected || 0,
-        },
-    };
+    return { dataPromise };
+}
+
+function JobDetailSkeleton() {
+    return (
+        <div className="p-8">
+            {/* Header Skeleton */}
+            <div className="mb-6">
+                <Skeleton className="h-9 w-32 mb-4" />
+                <div className="flex items-start justify-between">
+                    <div>
+                        <Skeleton className="h-9 w-64 mb-2" />
+                        <Skeleton className="h-5 w-32 mb-3" />
+                        <Skeleton className="h-4 w-48" />
+                    </div>
+                    <div className="flex gap-2">
+                        <Skeleton className="h-10 w-28" />
+                        <Skeleton className="h-10 w-40" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats Cards Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                {[1, 2, 3, 4].map((i) => (
+                    <Card key={i}>
+                        <CardHeader className="pb-3">
+                            <Skeleton className="h-4 w-32 mb-2" />
+                            <Skeleton className="h-9 w-16" />
+                        </CardHeader>
+                    </Card>
+                ))}
+            </div>
+
+            {/* Main Content Skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <Skeleton className="h-6 w-32" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <Separator />
+                        <div className="space-y-2">
+                            {[1, 2, 3, 4, 5, 6].map((i) => (
+                                <Skeleton key={i} className="h-12 w-full" />
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-32" />
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                            <Skeleton key={i} className="h-10 w-full" />
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
 }
 
 export default function JobDetail({ loaderData }: Route.ComponentProps) {
-    const { job, candidatesByStage, hasAssessment, stats } = loaderData;
+    const [data, setData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (loaderData?.dataPromise) {
+            loaderData.dataPromise
+                .then((result: any) => {
+                    setData(result);
+                    setIsLoading(false);
+                })
+                .catch((error: any) => {
+                    console.error("Failed to load job:", error);
+                    setIsLoading(false);
+                });
+        }
+    }, [loaderData]);
+
+    if (isLoading || !data) {
+        return <JobDetailSkeleton />;
+    }
+
+    const { job, candidatesByStage, hasAssessment, stats } = data;
 
     const stageOrder = [
         "applied",
@@ -358,7 +449,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
             </div>
 
             {/* Recent Candidates */}
-            {loaderData.candidates.length > 0 && (
+            {data.candidates.length > 0 && (
                 <Card className="mt-6">
                     <CardHeader>
                         <div className="flex items-center justify-between">
@@ -372,7 +463,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
-                            {loaderData.candidates
+                            {data.candidates
                                 .slice(0, 5)
                                 .map((candidate: any) => (
                                     <Link

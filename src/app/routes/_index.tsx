@@ -16,39 +16,160 @@ import {
     TrendingUp,
     Activity,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from "react";
 
+// Non-blocking loader
 export async function clientLoader() {
-    const [jobs, candidates] = await Promise.all([
+    const dataPromise = Promise.all([
         db.jobs.toArray(),
         db.candidates.toArray(),
-    ]);
+    ]).then(([jobs, candidates]) => {
+        const activeJobs = jobs.filter((j) => j.status === "active").length;
+        const totalCandidates = candidates.length;
+        const recentApplications = candidates.filter((c) => {
+            const daysSinceApplication =
+                (Date.now() - c.appliedAt.getTime()) / (1000 * 60 * 60 * 24);
+            return daysSinceApplication <= 7;
+        }).length;
 
-    const activeJobs = jobs.filter((j) => j.status === "active").length;
-    const totalCandidates = candidates.length;
-    const recentApplications = candidates.filter((c) => {
-        const daysSinceApplication =
-            (Date.now() - c.appliedAt.getTime()) / (1000 * 60 * 60 * 24);
-        return daysSinceApplication <= 7;
-    }).length;
+        const candidatesByStage = candidates.reduce((acc, c) => {
+            acc[c.stage] = (acc[c.stage] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
 
-    const candidatesByStage = candidates.reduce((acc, c) => {
-        acc[c.stage] = (acc[c.stage] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
+        return {
+            stats: {
+                activeJobs,
+                totalCandidates,
+                recentApplications,
+                candidatesByStage,
+            },
+            recentJobs: jobs.slice(0, 5),
+        };
+    });
 
-    return {
-        stats: {
-            activeJobs,
-            totalCandidates,
-            recentApplications,
-            candidatesByStage,
-        },
-        recentJobs: jobs.slice(0, 5),
-    };
+    return { dataPromise };
+}
+
+function DashboardSkeleton() {
+    return (
+        <div className="p-8">
+            <div className="mb-8">
+                <Skeleton className="h-9 w-48 mb-2" />
+                <Skeleton className="h-5 w-96" />
+            </div>
+
+            {/* Stats Grid Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {[1, 2, 3, 4].map((i) => (
+                    <Card key={i}>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-9 w-9 rounded-lg" />
+                        </CardHeader>
+                        <CardContent>
+                            <Skeleton className="h-9 w-16 mb-2" />
+                            <Skeleton className="h-3 w-32" />
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            {/* Pipeline Overview Skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-48" />
+                        <Skeleton className="h-4 w-64" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <div
+                                    key={i}
+                                    className="flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Skeleton className="h-3 w-3 rounded-full" />
+                                        <Skeleton className="h-4 w-24" />
+                                    </div>
+                                    <Skeleton className="h-4 w-8" />
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-32" />
+                        <Skeleton className="h-4 w-40" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-3">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <div key={i} className="p-3 rounded-lg border">
+                                    <Skeleton className="h-5 w-48 mb-2" />
+                                    <div className="flex gap-2">
+                                        <Skeleton className="h-5 w-16" />
+                                        <Skeleton className="h-5 w-20" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Quick Actions Skeleton */}
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[1, 2, 3].map((i) => (
+                            <div
+                                key={i}
+                                className="p-4 border-2 border-dashed rounded-lg"
+                            >
+                                <Skeleton className="h-8 w-8 mb-2" />
+                                <Skeleton className="h-5 w-32 mb-2" />
+                                <Skeleton className="h-4 w-28" />
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
 }
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
-    const stats = loaderData.stats;
+    const [data, setData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (loaderData?.dataPromise) {
+            loaderData.dataPromise
+                .then((result: any) => {
+                    setData(result);
+                    setIsLoading(false);
+                })
+                .catch((error: any) => {
+                    console.error("Failed to load dashboard:", error);
+                    setIsLoading(false);
+                });
+        }
+    }, [loaderData]);
+
+    if (isLoading || !data) {
+        return <DashboardSkeleton />;
+    }
+
+    const stats = data.stats;
 
     const statsCards = [
         {
@@ -163,7 +284,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                                             </span>
                                         </div>
                                         <span className="text-sm font-bold text-foreground">
-                                            {count}
+                                            {count as number}
                                         </span>
                                     </div>
                                 )
@@ -182,7 +303,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
-                            {loaderData.recentJobs.map((job: any) => (
+                            {data.recentJobs.map((job: any) => (
                                 <Link
                                     key={job.id}
                                     to={`/jobs/${job.id}`}

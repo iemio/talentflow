@@ -1,5 +1,5 @@
 import type { Route } from "./+types/candidates.kanban";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
@@ -9,28 +9,86 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { List, Search, Mail, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
+// Non-blocking loader
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     const url = new URL(request.url);
     const jobId = url.searchParams.get("jobId");
 
-    let candidates = await db.candidates.toArray();
+    const dataPromise = (async () => {
+        let candidates = await db.candidates.toArray();
 
-    if (jobId) {
-        candidates = candidates.filter((c) => c.jobId === jobId);
-    }
+        if (jobId) {
+            candidates = candidates.filter((c) => c.jobId === jobId);
+        }
 
-    // Fetch job titles for display
-    const jobIds = [...new Set(candidates.map((c) => c.jobId))];
-    const jobs = await db.jobs.bulkGet(jobIds);
-    const jobMap = new Map(jobs.filter(Boolean).map((j) => [j!.id, j!.title]));
+        // Fetch job titles for display
+        const jobIds = [...new Set(candidates.map((c) => c.jobId))];
+        const jobs = await db.jobs.bulkGet(jobIds);
+        const jobMap = new Map(
+            jobs.filter(Boolean).map((j) => [j!.id, j!.title])
+        );
 
-    return {
-        candidates: candidates.map((c) => ({
-            ...c,
-            jobTitle: jobMap.get(c.jobId) || "Unknown Job",
-        })),
-    };
+        return {
+            candidates: candidates.map((c) => ({
+                ...c,
+                jobTitle: jobMap.get(c.jobId) || "Unknown Job",
+            })),
+        };
+    })();
+
+    return { dataPromise };
+}
+
+// Skeleton component
+function KanbanSkeleton() {
+    return (
+        <div className="p-8">
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <Skeleton className="h-9 w-64 mb-2" />
+                        <Skeleton className="h-5 w-80" />
+                    </div>
+                    <Skeleton className="h-10 w-28" />
+                </div>
+                <Skeleton className="h-10 w-96" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <Card key={i} className="flex-1">
+                        <CardHeader className="bg-gray-100 dark:bg-gray-800 border-b">
+                            <div className="flex items-center justify-between">
+                                <Skeleton className="h-5 w-20" />
+                                <Skeleton className="h-6 w-8 rounded-full" />
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-4">
+                            {[1, 2, 3].map((j) => (
+                                <div key={j} className="mb-3">
+                                    <Card>
+                                        <CardContent className="p-4">
+                                            <div className="flex items-start gap-3">
+                                                <Skeleton className="h-10 w-10 rounded-full" />
+                                                <div className="flex-1 space-y-2">
+                                                    <Skeleton className="h-4 w-32" />
+                                                    <Skeleton className="h-3 w-full" />
+                                                    <Skeleton className="h-3 w-24" />
+                                                    <Skeleton className="h-3 w-20" />
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 interface KanbanColumn {
@@ -125,14 +183,35 @@ function CandidateCard({
 
 export default function CandidatesKanban({ loaderData }: Route.ComponentProps) {
     const navigate = useNavigate();
+    const [data, setData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [draggedCandidate, setDraggedCandidate] = useState<any>(null);
     const [draggedOverColumn, setDraggedOverColumn] = useState<string | null>(
         null
     );
 
+    useEffect(() => {
+        if (loaderData?.dataPromise) {
+            loaderData.dataPromise
+                .then((result: any) => {
+                    setData(result);
+                    setIsLoading(false);
+                })
+                .catch((error: any) => {
+                    console.error("Failed to load candidates:", error);
+                    setIsLoading(false);
+                    toast.error("Failed to load candidates");
+                });
+        }
+    }, [loaderData]);
+
+    if (isLoading || !data) {
+        return <KanbanSkeleton />;
+    }
+
     // Filter candidates by search term
-    const filteredCandidates = loaderData.candidates.filter(
+    const filteredCandidates = data.candidates.filter(
         (candidate: any) =>
             candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             candidate.email.toLowerCase().includes(searchTerm.toLowerCase())

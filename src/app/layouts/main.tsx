@@ -15,23 +15,80 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import React from "react";
+import React, { useMemo, memo, useCallback } from "react";
 import AnimatedOutlet from "@/components/animated-outlet";
 
 const routeTitles: Record<string, { title: string; parent?: string }> = {
     "/": { title: "Dashboard" },
     "/jobs": { title: "Jobs" },
     "/candidates": { title: "Candidates" },
+    "/assessments": { title: "Assessments" },
 };
 
-export default function MainLayout() {
+// Memoized breadcrumb item to prevent unnecessary re-renders
+const BreadcrumbItemMemo = memo(
+    ({
+        crumb,
+        showSeparator,
+    }: {
+        crumb: { title: string; href: string; isLast: boolean };
+        showSeparator: boolean;
+    }) => (
+        <>
+            {showSeparator && <BreadcrumbSeparator />}
+            <BreadcrumbItem>
+                {crumb.isLast ? (
+                    <BreadcrumbPage>{crumb.title}</BreadcrumbPage>
+                ) : (
+                    <BreadcrumbLink href={crumb.href}>
+                        {crumb.title}
+                    </BreadcrumbLink>
+                )}
+            </BreadcrumbItem>
+        </>
+    )
+);
+
+BreadcrumbItemMemo.displayName = "BreadcrumbItemMemo";
+
+// Memoized header component
+const LayoutHeader = memo(
+    ({
+        breadcrumbs,
+    }: {
+        breadcrumbs: Array<{ title: string; href: string; isLast: boolean }>;
+    }) => {
+        return (
+            <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        {breadcrumbs.map((crumb, index) => (
+                            <BreadcrumbItemMemo
+                                key={crumb.href}
+                                crumb={crumb}
+                                showSeparator={index > 0}
+                            />
+                        ))}
+                    </BreadcrumbList>
+                </Breadcrumb>
+                <div className="ml-auto">
+                    <ThemeToggle />
+                </div>
+            </header>
+        );
+    }
+);
+
+LayoutHeader.displayName = "LayoutHeader";
+
+// Memoize the entire layout to prevent re-renders
+const MainLayout = memo(() => {
     const location = useLocation();
 
-    // Get current route info
-    // const currentRoute = routeTitles[location.pathname] || { title: "Page" };
-
-    // Function to generate breadcrumbs based on path
-    const getBreadcrumbs = () => {
+    // Memoize breadcrumbs calculation - only recalculates when pathname changes
+    const breadcrumbs = useMemo(() => {
         const path = location.pathname;
 
         // Home/Dashboard
@@ -58,51 +115,30 @@ export default function MainLayout() {
         });
 
         return breadcrumbs;
-    };
+    }, [location.pathname]);
 
-    const breadcrumbs = getBreadcrumbs();
+    // Memoize the style object to prevent re-creation
+    const sidebarStyle = useMemo(
+        () =>
+            ({
+                "--sidebar-width": "19rem",
+            } as React.CSSProperties),
+        []
+    );
 
     return (
-        <SidebarProvider
-            style={
-                {
-                    "--sidebar-width": "19rem",
-                } as React.CSSProperties
-            }
-        >
+        <SidebarProvider style={sidebarStyle}>
             <AppSidebar />
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator orientation="vertical" className="mr-2 h-4" />
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            {breadcrumbs.map((crumb, index) => (
-                                <React.Fragment key={crumb.href}>
-                                    {index > 0 && <BreadcrumbSeparator />}
-                                    <BreadcrumbItem>
-                                        {crumb.isLast ? (
-                                            <BreadcrumbPage>
-                                                {crumb.title}
-                                            </BreadcrumbPage>
-                                        ) : (
-                                            <BreadcrumbLink href={crumb.href}>
-                                                {crumb.title}
-                                            </BreadcrumbLink>
-                                        )}
-                                    </BreadcrumbItem>
-                                </React.Fragment>
-                            ))}
-                        </BreadcrumbList>
-                    </Breadcrumb>
-                    <div className="ml-auto">
-                        <ThemeToggle />
-                    </div>
-                </header>
+                <LayoutHeader breadcrumbs={breadcrumbs} />
                 <div className="flex flex-1 flex-col">
                     <AnimatedOutlet />
                 </div>
             </SidebarInset>
         </SidebarProvider>
     );
-}
+});
+
+MainLayout.displayName = "MainLayout";
+
+export default MainLayout;

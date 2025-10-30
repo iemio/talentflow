@@ -1,6 +1,12 @@
 import type { Route } from "./+types/jobs._index";
 import { useState, useEffect } from "react";
-import { Form, Link, useSearchParams, useNavigate } from "react-router";
+import {
+    Form,
+    Link,
+    useSearchParams,
+    useNavigate,
+    useRevalidator,
+} from "react-router";
 import {
     DndContext,
     closestCenter,
@@ -50,22 +56,84 @@ import {
 } from "lucide-react";
 import { db, type Job } from "@/lib/db";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
+// Non-blocking loader
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     const url = new URL(request.url);
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "all";
     const page = url.searchParams.get("page") || "1";
 
-    const response = await fetch(
+    const dataPromise = fetch(
         `/api/jobs?search=${search}&status=${status}&page=${page}&pageSize=10&sort=order`
+    ).then((res) => {
+        if (!res.ok) throw new Error("Failed to load jobs");
+        return res.json();
+    });
+
+    return { dataPromise };
+}
+
+// Skeleton component
+function JobsListSkeleton() {
+    return (
+        <div className="p-8">
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <Skeleton className="h-9 w-32 mb-2" />
+                    <Skeleton className="h-5 w-48" />
+                </div>
+                <Skeleton className="h-10 w-32" />
+            </div>
+
+            <Card className="mb-6">
+                <CardContent className="pt-6">
+                    <div className="flex gap-4">
+                        <Skeleton className="h-10 flex-1" />
+                        <Skeleton className="h-10 w-[180px]" />
+                        <Skeleton className="h-10 w-20" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+                {[1, 2, 3, 4].map((i) => (
+                    <Card key={i}>
+                        <CardHeader className="pb-3">
+                            <div className="flex items-start gap-3">
+                                <Skeleton className="h-6 w-6 shrink-0" />
+                                <div className="flex-1 space-y-3">
+                                    <div className="flex items-start justify-between">
+                                        <div className="space-y-2">
+                                            <Skeleton className="h-6 w-64" />
+                                            <Skeleton className="h-4 w-32" />
+                                        </div>
+                                        <Skeleton className="h-6 w-16" />
+                                    </div>
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <div className="flex gap-2 mt-3">
+                                        <Skeleton className="h-6 w-20" />
+                                        <Skeleton className="h-6 w-24" />
+                                        <Skeleton className="h-6 w-16" />
+                                    </div>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                            <div className="flex gap-2">
+                                <Skeleton className="h-9 w-20" />
+                                <Skeleton className="h-9 w-20" />
+                                <Skeleton className="h-9 w-24" />
+                                <Skeleton className="h-9 w-28" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
     );
-
-    if (!response.ok) {
-        throw new Error("Failed to load jobs");
-    }
-
-    return response.json();
 }
 
 function SortableJobCard({
@@ -362,10 +430,13 @@ function JobFormDialog({
 export default function JobsIndex({ loaderData }: Route.ComponentProps) {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
+    const revalidator = useRevalidator();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingJob, setEditingJob] = useState<Job | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
-    const [optimisticJobs, setOptimisticJobs] = useState(loaderData.data);
+    const [data, setData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [optimisticJobs, setOptimisticJobs] = useState<Job[]>([]);
     const [isReordering, setIsReordering] = useState(false);
     const [statusFilter, setStatusFilter] = useState(
         searchParams.get("status") || "all"
@@ -379,17 +450,31 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
         })
     );
 
+    // Load data from promise
     useEffect(() => {
-        setOptimisticJobs(loaderData.data);
-    }, [loaderData.data]);
+        if (loaderData?.dataPromise) {
+            setIsLoading(true);
+            loaderData.dataPromise
+                .then((result: any) => {
+                    setData(result);
+                    setOptimisticJobs(result.data);
+                    setIsLoading(false);
+                })
+                .catch((error: any) => {
+                    console.error("Failed to load jobs:", error);
+                    setIsLoading(false);
+                    toast.error("Failed to load jobs");
+                });
+        }
+    }, [loaderData]);
 
-    const handleCreateOrUpdate = async (data: any) => {
+    const handleCreateOrUpdate = async (formData: any) => {
         try {
             if (editingJob) {
                 await fetch(`/api/jobs/${editingJob.id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data),
+                    body: JSON.stringify(formData),
                 });
                 toast.success("Job updated successfully");
             } else {
@@ -398,13 +483,13 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        ...data,
+                        ...formData,
                         order: (maxOrder?.order || 0) + 1,
                     }),
                 });
                 toast.success("Job created successfully");
             }
-            navigate("/jobs");
+            revalidator.revalidate();
         } catch (error) {
             toast.error("Failed to save job");
             throw error;
@@ -423,7 +508,7 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
             toast.success(
                 `Job ${job.status === "active" ? "archived" : "unarchived"}`
             );
-            navigate("/jobs");
+            revalidator.revalidate();
         } catch (error) {
             toast.error("Failed to update job");
         }
@@ -473,7 +558,7 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
             toast.success("Jobs reordered successfully");
         } catch (error) {
             // Rollback on failure
-            setOptimisticJobs(loaderData.data);
+            if (data) setOptimisticJobs(data.data);
             toast.error("Failed to reorder jobs. Changes reverted.");
         } finally {
             setIsReordering(false);
@@ -489,6 +574,11 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
     };
 
     const activeJob = optimisticJobs.find((j: Job) => j.id === activeId);
+
+    // Show loading skeleton
+    if (isLoading || !data) {
+        return <JobsListSkeleton />;
+    }
 
     return (
         <div className="p-8">
@@ -623,18 +713,15 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                 </DndContext>
             )}
 
-            {loaderData.meta && loaderData.meta.totalPages > 1 && (
+            {data?.meta && data.meta.totalPages > 1 && (
                 <div className="flex items-center justify-center gap-4 mt-6">
                     <Button
                         variant="outline"
                         size="sm"
-                        disabled={loaderData.meta.page === 1}
+                        disabled={data.meta.page === 1}
                         onClick={() => {
                             const newParams = new URLSearchParams(searchParams);
-                            newParams.set(
-                                "page",
-                                String(loaderData.meta.page - 1)
-                            );
+                            newParams.set("page", String(data.meta.page - 1));
                             setSearchParams(newParams);
                         }}
                     >
@@ -643,22 +730,16 @@ export default function JobsIndex({ loaderData }: Route.ComponentProps) {
                     </Button>
 
                     <span className="text-sm font-medium text-foreground min-w-[120px] text-center">
-                        Page {loaderData.meta.page} of{" "}
-                        {loaderData.meta.totalPages}
+                        Page {data.meta.page} of {data.meta.totalPages}
                     </span>
 
                     <Button
                         variant="outline"
                         size="sm"
-                        disabled={
-                            loaderData.meta.page === loaderData.meta.totalPages
-                        }
+                        disabled={data.meta.page === data.meta.totalPages}
                         onClick={() => {
                             const newParams = new URLSearchParams(searchParams);
-                            newParams.set(
-                                "page",
-                                String(loaderData.meta.page + 1)
-                            );
+                            newParams.set("page", String(data.meta.page + 1));
                             setSearchParams(newParams);
                         }}
                     >

@@ -1,5 +1,5 @@
 import type { Route } from "./+types/candidates._index";
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
 import { Form, Link, useSearchParams } from "react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { db } from "@/lib/db";
@@ -16,36 +16,97 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Search, Filter, Users } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
+// Non-blocking loader
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     const url = new URL(request.url);
     const stage = url.searchParams.get("stage") || "all";
     const jobId = url.searchParams.get("jobId");
 
-    let query = db.candidates.toCollection();
+    const dataPromise = (async () => {
+        let query = db.candidates.toCollection();
 
-    if (stage && stage !== "all") {
-        query = db.candidates.where("stage").equals(stage);
-    }
+        if (stage && stage !== "all") {
+            query = db.candidates.where("stage").equals(stage);
+        }
 
-    let candidates = await query.toArray();
+        let candidates = await query.toArray();
 
-    if (jobId) {
-        candidates = candidates.filter((c) => c.jobId === jobId);
-    }
+        if (jobId) {
+            candidates = candidates.filter((c) => c.jobId === jobId);
+        }
 
-    // Fetch job titles for display
-    const jobIds = [...new Set(candidates.map((c) => c.jobId))];
-    const jobs = await db.jobs.bulkGet(jobIds);
-    const jobMap = new Map(jobs.filter(Boolean).map((j) => [j!.id, j!.title]));
+        // Fetch job titles for display
+        const jobIds = [...new Set(candidates.map((c) => c.jobId))];
+        const jobs = await db.jobs.bulkGet(jobIds);
+        const jobMap = new Map(
+            jobs.filter(Boolean).map((j) => [j!.id, j!.title])
+        );
 
-    return {
-        candidates: candidates.map((c) => ({
-            ...c,
-            jobTitle: jobMap.get(c.jobId) || "Unknown Job",
-        })),
-        totalCount: candidates.length,
-    };
+        return {
+            candidates: candidates.map((c) => ({
+                ...c,
+                jobTitle: jobMap.get(c.jobId) || "Unknown Job",
+            })),
+            totalCount: candidates.length,
+        };
+    })();
+
+    return { dataPromise };
+}
+
+function CandidatesSkeleton() {
+    return (
+        <div className="p-8">
+            {/* Header Skeleton */}
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <Skeleton className="h-9 w-48 mb-2" />
+                        <Skeleton className="h-5 w-32" />
+                    </div>
+                    <Skeleton className="h-10 w-36" />
+                </div>
+            </div>
+
+            {/* Filters Skeleton */}
+            <Card className="mb-6">
+                <CardContent className="pt-6">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                        <Skeleton className="h-10 flex-1" />
+                        <Skeleton className="h-10 w-[200px]" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Stage Pills Skeleton */}
+            <div className="flex flex-wrap gap-2 mb-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <Skeleton key={i} className="h-6 w-20" />
+                ))}
+            </div>
+
+            {/* List Skeleton */}
+            <Card>
+                <div className="h-[calc(100vh-400px)] overflow-hidden">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <div
+                            key={i}
+                            className="flex items-center gap-4 p-4 border-b"
+                        >
+                            <Skeleton className="h-10 w-10 rounded-full" />
+                            <div className="flex-1 space-y-2">
+                                <Skeleton className="h-5 w-48" />
+                                <Skeleton className="h-4 w-64" />
+                            </div>
+                            <Skeleton className="h-6 w-20" />
+                        </div>
+                    ))}
+                </div>
+            </Card>
+        </div>
+    );
 }
 
 function CandidateRow({ candidate }: { candidate: any }) {
@@ -114,18 +175,35 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
     const [stageFilter, setStageFilter] = useState(
         searchParams.get("stage") || "all"
     );
+    const [data, setData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (loaderData?.dataPromise) {
+            loaderData.dataPromise
+                .then((result: any) => {
+                    setData(result);
+                    setIsLoading(false);
+                })
+                .catch((error: any) => {
+                    console.error("Failed to load candidates:", error);
+                    setIsLoading(false);
+                });
+        }
+    }, [loaderData]);
 
     // Client-side filtering for name/email search
     const filteredCandidates = useMemo(() => {
-        if (!searchTerm) return loaderData.candidates;
+        if (!data) return [];
+        if (!searchTerm) return data.candidates;
 
         const lowerSearch = searchTerm.toLowerCase();
-        return loaderData.candidates.filter(
+        return data.candidates.filter(
             (candidate: any) =>
                 candidate.name.toLowerCase().includes(lowerSearch) ||
                 candidate.email.toLowerCase().includes(lowerSearch)
         );
-    }, [loaderData.candidates, searchTerm]);
+    }, [data, searchTerm]);
 
     const virtualizer = useVirtualizer({
         count: filteredCandidates.length,
@@ -135,7 +213,7 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
     });
 
     const stages = [
-        { value: "all", label: "All Stages", count: loaderData.totalCount },
+        { value: "all", label: "All Stages", count: data?.totalCount },
         { value: "applied", label: "Applied" },
         { value: "screen", label: "Screening" },
         { value: "tech", label: "Technical" },
@@ -152,6 +230,10 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
         newParams.set("stage", value);
         setSearchParams(newParams);
     };
+
+    if (isLoading || !data) {
+        return <CandidatesSkeleton />;
+    }
 
     return (
         <div className="p-8">
@@ -292,8 +374,8 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
 
             {/* Stats Footer */}
             <div className="mt-4 text-sm text-muted-foreground text-center">
-                Showing {filteredCandidates.length} of {loaderData.totalCount}{" "}
-                total candidates
+                Showing {filteredCandidates.length} of {data.totalCount} total
+                candidates
             </div>
         </div>
     );
