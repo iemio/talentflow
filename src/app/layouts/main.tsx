@@ -15,14 +15,14 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import React, { useMemo, memo, useCallback } from "react";
+import React, { useMemo, memo } from "react";
 import AnimatedOutlet from "@/components/animated-outlet";
 
 const routeTitles: Record<string, { title: string; parent?: string }> = {
-    "/": { title: "Dashboard" },
-    "/jobs": { title: "Jobs" },
-    "/candidates": { title: "Candidates" },
-    "/assessments": { title: "Assessments" },
+    "/dashboard/overview": { title: "Overview" },
+    "/dashboard/jobs": { title: "Jobs" },
+    "/dashboard/candidates": { title: "Candidates" },
+    "/dashboard/assessments": { title: "Assessments" },
 };
 
 // Memoized breadcrumb item to prevent unnecessary re-renders
@@ -103,6 +103,12 @@ const MainLayout = memo(() => {
         let currentPath = "";
         segments.forEach((segment, index) => {
             currentPath += `/${segment}`;
+
+            // Skip the "dashboard" segment since we already have "Dashboard" as root
+            if (segment === "dashboard") {
+                return;
+            }
+
             const isLast = index === segments.length - 1;
             const title =
                 routeTitles[currentPath]?.title ||

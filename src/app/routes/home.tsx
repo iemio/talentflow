@@ -22,6 +22,7 @@ import {
     Star,
     Sparkles,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export default function TalentFlowLanding() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -146,9 +147,11 @@ export default function TalentFlowLanding() {
             highlighted: false,
         },
     ];
-
-    const handleDemoLogin = () => {
-        alert("Demo login would redirect to /dashboard with pre-seeded data");
+    const navigate = useNavigate();
+    const handleDemoLogin = (e: React.MouseEvent) => {
+        e.preventDefault();
+        // Use navigate with replace to avoid adding to history
+        navigate("/dashboard/overview", { replace: false });
     };
 
     return (
@@ -166,7 +169,7 @@ export default function TalentFlowLanding() {
                             </span>
                         </div>
 
-            <div className="hidden md:flex items-center gap-8">
+                        <div className="hidden md:flex items-center gap-8">
                             <a
                                 href="#features"
                                 className="text-muted-foreground hover:text-foreground transition-colors font-medium"
@@ -270,8 +273,8 @@ export default function TalentFlowLanding() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-6 justify-center">
                         <Button
-                           size="lg"
-                           className="text-lg px-10 py-7 rounded-2xl bg-primary hover:bg-primary/90 shadow-xl"
+                            size="lg"
+                            className="text-lg px-10 py-7 rounded-2xl bg-primary hover:bg-primary/90 shadow-xl"
                             onClick={handleDemoLogin}
                         >
                             Try Demo Account{" "}
@@ -303,8 +306,7 @@ export default function TalentFlowLanding() {
                         </h2>
                         <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
                             From posting jobs to making offers, TalentFlow
-                            provides all the toolsyour HR team needs to
-                            succeed.
+                            provides all the toolsyour HR team needs to succeed.
                         </p>
                     </div>
 
@@ -404,11 +406,11 @@ export default function TalentFlowLanding() {
                     <div className="grid md:grid-cols-3 gap-8">
                         {pricingPlans.map((plan, index) => (
                             <Card
-                               key={index}
-                               className={`border-border rounded-3xl transition-all duration-300 ${
+                                key={index}
+                                className={`border-border rounded-3xl transition-all duration-300 ${
                                     plan.highlighted
                                         ? "ring-2 ring-primary shadow-2xl scale-105 bg-card"
-                                       : "hover:shadow-xl"
+                                        : "hover:shadow-xl"
                                 }`}
                             >
                                 <CardHeader className="pb-4">
@@ -452,7 +454,7 @@ export default function TalentFlowLanding() {
                                         className={`w-full rounded-2xl py-6 text-base ${
                                             plan.highlighted
                                                 ? "bg-primary hover:bg-primary/90"
-                                               : "bg-foreground text-background hover:bg-foreground/90"
+                                                : "bg-foreground text-background hover:bg-foreground/90"
                                         }`}
                                         onClick={handleDemoLogin}
                                     >
@@ -481,8 +483,8 @@ export default function TalentFlowLanding() {
                             account. No signup required.
                         </p>
                         <Button
-                           size="lg"
-                           className="text-lg px-10 py-7 rounded-2xl bg-primary hover:bg-primary/90 shadow-xl"
+                            size="lg"
+                            className="text-lg px-10 py-7 rounded-2xl bg-primary hover:bg-primary/90 shadow-xl"
                             onClick={handleDemoLogin}
                         >
                             Launch Demo Account{" "}
@@ -511,7 +513,7 @@ export default function TalentFlowLanding() {
                             </p>
                         </div>
 
-            <div>
+                        <div>
                             <h3 className="font-bold text-foreground mb-4 text-lg">
                                 Product
                             </h3>
@@ -551,7 +553,7 @@ export default function TalentFlowLanding() {
                             </ul>
                         </div>
 
-            <div>
+                        <div>
                             <h3 className="font-bold text-foreground mb-4 text-lg">
                                 Company
                             </h3>
@@ -591,7 +593,7 @@ export default function TalentFlowLanding() {
                             </ul>
                         </div>
 
-            <div>
+                        <div>
                             <h3 className="font-bold text-foreground mb-4 text-lg">
                                 Legal
                             </h3>
@@ -632,7 +634,7 @@ export default function TalentFlowLanding() {
                         </div>
                     </div>
 
-          <div className="border-t border-border pt-8 text-center text-muted-foreground">
+                    <div className="border-t border-border pt-8 text-center text-muted-foreground">
                         <p>&copy; 2025 TalentFlow. All rights reserved.</p>
                     </div>
                 </div>

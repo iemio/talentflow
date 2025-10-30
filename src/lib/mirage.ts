@@ -369,7 +369,6 @@ export function makeServer({ environment = "development" } = {}) {
                         const currentStageIndex =
                             stageProgression.indexOf(stage);
 
-                        // Add notes for progressed candidates
                         if (currentStageIndex >= 1) {
                             const noteCount = faker.number.int({
                                 min: 1,
@@ -396,7 +395,6 @@ export function makeServer({ environment = "development" } = {}) {
                             }
                         }
 
-                        // Add interviews for candidates in interview stage or beyond
                         if (currentStageIndex >= 2 && stage !== "rejected") {
                             const interviewCount = Math.min(
                                 currentStageIndex - 1,
@@ -467,7 +465,6 @@ export function makeServer({ environment = "development" } = {}) {
                     }
                 }
 
-                // Create assessments with responses
                 const sampleJobs = jobs.slice(0, 8);
                 for (const job of sampleJobs) {
                     const hasTimeLimit = faker.datatype.boolean();
@@ -533,7 +530,6 @@ export function makeServer({ environment = "development" } = {}) {
                         updatedAt: new Date(),
                     });
 
-                    // Add assessment responses
                     const jobCandidates = await db.candidates
                         .where("jobId")
                         .equals(job.id!)
@@ -606,7 +602,24 @@ export function makeServer({ environment = "development" } = {}) {
         },
 
         routes() {
+            // CRITICAL FIX: Handle React Router data loader requests BEFORE setting namespace
+            // Catch-all for any .data requests from React Router
+            this.get("/*.data", () => {
+                return new Response(204, {}, "");
+            });
+
+            this.get("/_data", () => {
+                return new Response(204, {}, "");
+            });
+
+            this.get("/data", () => {
+                return new Response(204, {}, "");
+            });
+
+            // Now set namespace for API routes
             this.namespace = "api";
+
+            // Passthrough rules
             this.passthrough("/__manifest");
             this.passthrough((request) => {
                 return (

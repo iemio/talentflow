@@ -15,10 +15,14 @@ import {
 } from "@/components/ui/sidebar";
 
 const navigation = [
-    { title: "Dashboard", url: "/", icon: Home },
-    { title: "Jobs", url: "/jobs", icon: Briefcase },
-    { title: "Candidates", url: "/candidates", icon: Users },
-    { title: "Assessments", url: "/assessments", icon: ClipboardList },
+    { title: "Overview", url: "/dashboard/overview", icon: Home },
+    { title: "Jobs", url: "/dashboard/jobs", icon: Briefcase },
+    { title: "Candidates", url: "/dashboard/candidates", icon: Users },
+    {
+        title: "Assessments",
+        url: "/dashboard/assessments",
+        icon: ClipboardList,
+    },
 ];
 
 const sidebarVariants: Variants = {
@@ -69,7 +73,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         }}
                                         className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg"
                                     >
-                                        <ClipboardList className="size-4" />
+                                        <Briefcase className="size-4" />
                                     </motion.div>
                                     <div className="flex flex-col gap-0.5 leading-none">
                                         <span className="font-semibold">

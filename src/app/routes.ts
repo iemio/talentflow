@@ -4,6 +4,7 @@ import {
     route,
     layout,
 } from "@react-router/dev/routes";
+import { redirect } from "react-router";
 
 // import { flatRoutes } from "@react-router/fs-routes";
 
@@ -13,18 +14,19 @@ import {
 
 export default [
     index("routes/home.tsx"),
+    route("dashboard", "routes/dashboard.redirect.tsx"),
     layout("layouts/main.tsx", [
-        route("dashboard", "routes/_index.tsx"),
-        route("jobs", "routes/jobs._index.tsx"),
-        route("jobs/:jobId", "routes/jobs.$jobId.tsx"),
-        route("jobs/:jobId/edit", "routes/jobs.$jobId.edit.tsx"),
-        route("candidates", "routes/candidates._index.tsx"),
-        route("candidates/kanban", "routes/candidates.kanban.tsx"),
-        route("candidates/:id", "routes/candidates.$id.tsx"),
-        route("assessments", "routes/assessments._index.tsx"),
-        route("assessments/:jobId", "routes/assessments.$jobId.tsx"),
+        route("dashboard/overview", "routes/_index.tsx"),
+        route("dashboard/jobs", "routes/jobs._index.tsx"),
+        route("dashboard/jobs/:jobId", "routes/jobs.$jobId.tsx"),
+        route("dashboard/jobs/:jobId/edit", "routes/jobs.$jobId.edit.tsx"),
+        route("dashboard/candidates", "routes/candidates._index.tsx"),
+        route("dashboard/candidates/kanban", "routes/candidates.kanban.tsx"),
+        route("dashboard/candidates/:id", "routes/candidates.$id.tsx"),
+        route("dashboard/assessments", "routes/assessments._index.tsx"),
+        route("dashboard/assessments/:jobId", "routes/assessments.$jobId.tsx"),
         route(
-            "assessments/:jobId/preview",
+            "dashboard/assessments/:jobId/preview",
             "routes/assessments.$jobId.preview.tsx"
         ),
     ]),

@@ -52,6 +52,14 @@ export async function clientLoader() {
     return { dataPromise };
 }
 
+// Tell React Router to skip server fetch for both hydration and navigation
+clientLoader.hydrate = true;
+
+// Add a server loader that does nothing to prevent server fetch attempts
+export async function loader() {
+    return null;
+}
+
 function DashboardSkeleton() {
     return (
         <div className="p-8">
