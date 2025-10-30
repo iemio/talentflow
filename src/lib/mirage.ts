@@ -1,7 +1,52 @@
-// src/lib/mirage.ts - UPDATED WITH ALL NEW FEATURES
+// Enhanced mirage.ts with comprehensive sample data
 import { createServer, Model, Factory, Response } from "miragejs";
 import { db, type Job } from "./db";
 import { faker } from "@faker-js/faker";
+
+const APPLICATION_SOURCES = [
+    "LinkedIn",
+    "Indeed",
+    "Company Website",
+    "Referral",
+    "Glassdoor",
+    "Direct",
+];
+
+const DEPARTMENTS = [
+    "Engineering",
+    "Product",
+    "Design",
+    "Marketing",
+    "Sales",
+    "Operations",
+    "HR",
+    "Finance",
+];
+
+const TECHNICAL_SKILLS = [
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Node.js",
+    "Python",
+    "Java",
+    "AWS",
+    "Docker",
+    "Kubernetes",
+    "PostgreSQL",
+    "MongoDB",
+    "GraphQL",
+];
+
+const SOFT_SKILLS = [
+    "Leadership",
+    "Communication",
+    "Problem-solving",
+    "Teamwork",
+    "Time management",
+    "Critical thinking",
+    "Adaptability",
+];
 
 export function makeServer({ environment = "development" } = {}) {
     return createServer({
@@ -14,7 +59,7 @@ export function makeServer({ environment = "development" } = {}) {
         },
 
         factories: {
-            job: Factory.extend<Job>({
+            job: Factory.extend<Partial<Job>>({
                 id() {
                     return faker.string.uuid();
                 },
@@ -23,7 +68,10 @@ export function makeServer({ environment = "development" } = {}) {
                 },
                 slug: "",
                 status() {
-                    return faker.helpers.arrayElement(["active", "archived"]);
+                    return faker.helpers.arrayElement([
+                        "active",
+                        "archived",
+                    ] as const);
                 },
                 tags() {
                     return faker.helpers.arrayElements(
@@ -41,7 +89,141 @@ export function makeServer({ environment = "development" } = {}) {
                     return i;
                 },
                 description() {
-                    return faker.lorem.paragraph();
+                    return faker.lorem.paragraphs(3);
+                },
+                location() {
+                    return (
+                        faker.location.city() +
+                        ", " +
+                        faker.location.state({ abbreviated: true })
+                    );
+                },
+                locationType() {
+                    return faker.helpers.arrayElement([
+                        "onsite",
+                        "hybrid",
+                        "remote",
+                    ] as const);
+                },
+                department() {
+                    return faker.helpers.arrayElement(DEPARTMENTS);
+                },
+                employmentType() {
+                    return faker.helpers.arrayElement([
+                        "full-time",
+                        "part-time",
+                        "contract",
+                    ] as const);
+                },
+                requirements() {
+                    return {
+                        required: [
+                            `${faker.number.int({
+                                min: 3,
+                                max: 8,
+                            })}+ years of professional experience`,
+                            `Strong proficiency in ${faker.helpers.arrayElement(
+                                TECHNICAL_SKILLS
+                            )}`,
+                            "Experience with modern development practices",
+                            "Excellent problem-solving abilities",
+                        ],
+                        preferred: [
+                            `Experience with ${faker.helpers.arrayElement(
+                                TECHNICAL_SKILLS
+                            )}`,
+                            "Previous leadership or mentoring experience",
+                            "Open source contributions",
+                        ],
+                        education: faker.helpers.arrayElement([
+                            "Bachelor's degree in Computer Science or related field",
+                            "Bachelor's or Master's degree in relevant field",
+                            "Relevant degree or equivalent experience",
+                        ]),
+                        experience: `${faker.number.int({
+                            min: 3,
+                            max: 10,
+                        })}+ years of relevant experience`,
+                        certifications: faker.datatype.boolean()
+                            ? faker.helpers.arrayElements(
+                                  ["AWS Certified", "PMP", "Scrum Master"],
+                                  1
+                              )
+                            : [],
+                        skills: {
+                            technical: faker.helpers.arrayElements(
+                                TECHNICAL_SKILLS,
+                                { min: 3, max: 6 }
+                            ),
+                            soft: faker.helpers.arrayElements(SOFT_SKILLS, 3),
+                        },
+                    };
+                },
+                compensation() {
+                    const min = faker.number.int({ min: 60000, max: 120000 });
+                    return {
+                        salaryMin: min,
+                        salaryMax:
+                            min + faker.number.int({ min: 20000, max: 50000 }),
+                        currency: "USD",
+                        payPeriod: "annual" as const,
+                        bonusStructure: faker.datatype.boolean()
+                            ? `Performance bonus up to ${faker.number.int({
+                                  min: 10,
+                                  max: 30,
+                              })}%`
+                            : undefined,
+                        equity: faker.datatype.boolean()
+                            ? "Stock options available"
+                            : undefined,
+                    };
+                },
+                benefits() {
+                    return {
+                        health: ["Medical", "Dental", "Vision"],
+                        retirement: `401(k) with ${faker.number.int({
+                            min: 3,
+                            max: 6,
+                        })}% company match`,
+                        pto: `${faker.number.int({
+                            min: 15,
+                            max: 25,
+                        })} days PTO + ${faker.number.int({
+                            min: 8,
+                            max: 12,
+                        })} holidays`,
+                        other: [
+                            "Remote work stipend",
+                            "Professional development budget",
+                            "Flexible working hours",
+                            "Health & wellness program",
+                        ],
+                    };
+                },
+                applicationSources() {
+                    return {
+                        enabled: faker.helpers.arrayElements(
+                            APPLICATION_SOURCES,
+                            { min: 3, max: 5 }
+                        ),
+                        customSources: [],
+                    };
+                },
+                hiringProcess() {
+                    return {
+                        hiringManager: faker.person.fullName(),
+                        recruiter: faker.person.fullName(),
+                        positionsAvailable: faker.number.int({
+                            min: 1,
+                            max: 3,
+                        }),
+                    };
+                },
+                legal() {
+                    return {
+                        visaSponsorshipAvailable: faker.datatype.boolean(),
+                        backgroundCheckRequired: faker.datatype.boolean(),
+                    };
                 },
                 createdAt() {
                     return faker.date.past();
@@ -87,8 +269,26 @@ export function makeServer({ environment = "development" } = {}) {
                     return faker.date.past();
                 },
                 resumeUrl() {
-                    // All candidates use the same resume URL
                     return "https://drive.google.com/file/d/1Lh-Aw3ZeFVPQxNMPLtWWAougB3eDxJvy/view?usp=sharing";
+                },
+                source() {
+                    return faker.helpers.arrayElement(APPLICATION_SOURCES);
+                },
+                location() {
+                    return (
+                        faker.location.city() +
+                        ", " +
+                        faker.location.state({ abbreviated: true })
+                    );
+                },
+                currentCompany() {
+                    return faker.company.name();
+                },
+                currentTitle() {
+                    return faker.person.jobTitle();
+                },
+                yearsOfExperience() {
+                    return faker.number.int({ min: 1, max: 15 });
                 },
             }),
         },
@@ -103,14 +303,24 @@ export function makeServer({ environment = "development" } = {}) {
                     const job = jobs[i];
                     await db.jobs.put({
                         id: job.id,
-                        title: job.title,
-                        slug: job.slug,
+                        title: job.title!,
+                        slug: job.slug!,
                         status: job.status as "active" | "archived",
                         tags: job.tags,
                         order: i,
                         description: job.description,
-                        createdAt: new Date(job.createdAt),
-                        updatedAt: new Date(job.updatedAt),
+                        location: job.location,
+                        locationType: job.locationType,
+                        department: job.department,
+                        employmentType: job.employmentType,
+                        requirements: job.requirements,
+                        compensation: job.compensation,
+                        benefits: job.benefits,
+                        applicationSources: job.applicationSources,
+                        hiringProcess: job.hiringProcess,
+                        legal: job.legal,
+                        createdAt: new Date(job.createdAt!),
+                        updatedAt: new Date(job.updatedAt!),
                     });
                 }
 
@@ -140,9 +350,13 @@ export function makeServer({ environment = "development" } = {}) {
                             stage: stage as any,
                             appliedAt: new Date(candidate.appliedAt),
                             resumeUrl: candidate.resumeUrl,
+                            source: candidate.source,
+                            location: candidate.location,
+                            currentCompany: candidate.currentCompany,
+                            currentTitle: candidate.currentTitle,
+                            yearsOfExperience: candidate.yearsOfExperience,
                         });
 
-                        // Logical seeding based on stage progression
                         const stageProgression = [
                             "applied",
                             "screen",
@@ -155,7 +369,7 @@ export function makeServer({ environment = "development" } = {}) {
                         const currentStageIndex =
                             stageProgression.indexOf(stage);
 
-                        // Add notes for candidates who have progressed (screen and beyond)
+                        // Add notes for progressed candidates
                         if (currentStageIndex >= 1) {
                             const noteCount = faker.number.int({
                                 min: 1,
@@ -182,7 +396,7 @@ export function makeServer({ environment = "development" } = {}) {
                             }
                         }
 
-                        // Add interviews for candidates in interview stage or beyond (but not rejected)
+                        // Add interviews for candidates in interview stage or beyond
                         if (currentStageIndex >= 2 && stage !== "rejected") {
                             const interviewCount = Math.min(
                                 currentStageIndex - 1,
@@ -258,7 +472,7 @@ export function makeServer({ environment = "development" } = {}) {
                 for (const job of sampleJobs) {
                     const hasTimeLimit = faker.datatype.boolean();
                     await db.assessments.add({
-                        jobId: job.id,
+                        jobId: job.id!,
                         status: "published",
                         timeLimit: hasTimeLimit
                             ? faker.number.int({ min: 30, max: 120 })
@@ -319,10 +533,10 @@ export function makeServer({ environment = "development" } = {}) {
                         updatedAt: new Date(),
                     });
 
-                    // Add assessment responses for candidates who reached tech stage or beyond
+                    // Add assessment responses
                     const jobCandidates = await db.candidates
                         .where("jobId")
-                        .equals(job.id)
+                        .equals(job.id!)
                         .toArray();
 
                     for (const candidate of jobCandidates) {
@@ -339,8 +553,6 @@ export function makeServer({ environment = "development" } = {}) {
                             candidate.stage
                         );
 
-                        // Only candidates who reached tech stage or beyond have assessment responses
-                        // (excluding rejected at earlier stages)
                         if (
                             currentStageIndex >= 3 ||
                             (candidate.stage === "rejected" &&
@@ -354,7 +566,6 @@ export function makeServer({ environment = "development" } = {}) {
                                 max: Math.floor(timeLimit * 0.95),
                             });
 
-                            // Better candidates (offer, hired) get higher scores
                             let score;
                             if (["offer", "hired"].includes(candidate.stage)) {
                                 score = faker.number.int({ min: 75, max: 98 });
@@ -368,7 +579,7 @@ export function makeServer({ environment = "development" } = {}) {
 
                             await db.assessmentResponses.add({
                                 candidateId: candidate.id,
-                                jobId: job.id,
+                                jobId: job.id!,
                                 responses: {
                                     q1: faker.helpers.arrayElement([
                                         "JavaScript",
@@ -396,7 +607,6 @@ export function makeServer({ environment = "development" } = {}) {
 
         routes() {
             this.namespace = "api";
-
             this.passthrough("/__manifest");
             this.passthrough((request) => {
                 return (
@@ -412,14 +622,13 @@ export function makeServer({ environment = "development" } = {}) {
 
             this.timing = faker.number.int({ min: 200, max: 1200 });
 
-            // Jobs endpoints (keeping existing)
+            // Jobs endpoints
             this.get("/jobs", async (schema, request) => {
                 const {
                     search,
                     status,
                     page = "1",
                     pageSize = "10",
-                    sort,
                 } = request.queryParams;
 
                 if (Math.random() < 0.05) {
@@ -610,7 +819,7 @@ export function makeServer({ environment = "development" } = {}) {
                     content: data.content,
                     mentions: data.mentions || [],
                     createdAt: new Date(),
-                    createdBy: "Current User", // In real app, get from auth
+                    createdBy: "Current User",
                 });
 
                 return db.notes.get(noteId);
