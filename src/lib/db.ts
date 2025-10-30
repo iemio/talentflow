@@ -35,6 +35,8 @@ export interface Assessment {
     id?: number;
     jobId: string;
     sections: AssessmentSection[];
+    status: "draft" | "published";
+    timeLimit?: number; // in minutes, undefined means no limit
     updatedAt: Date;
 }
 

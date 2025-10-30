@@ -1,5 +1,5 @@
 import type { Route } from "./+types/assessments.$jobId.preview";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { db, type Question } from "@/lib/db";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,9 @@ import {
     Loader2,
     AlertCircle,
     CheckCircle,
+    Clock,
+    FileQuestion,
+    Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,11 +33,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
         throw new Response("Job not found", { status: 404 });
     }
 
-    if (!assessment) {
-        throw new Response("Assessment not found", { status: 404 });
-    }
-
-    return { job, assessment };
+    return { job, assessment: assessment || null };
 }
 
 export default function AssessmentPreview({
@@ -46,10 +45,74 @@ export default function AssessmentPreview({
     const [responses, setResponses] = useState<Record<string, any>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [timeRemaining, setTimeRemaining] = useState<number | null>(
+        assessment?.timeLimit ? assessment.timeLimit * 60 : null
+    );
+
+    // Timer countdown
+    useEffect(() => {
+        if (timeRemaining === null || timeRemaining <= 0) return;
+
+        const interval = setInterval(() => {
+            setTimeRemaining((prev) => {
+                if (prev === null || prev <= 1) {
+                    clearInterval(interval);
+                    toast.error("Time's up! Auto-submitting...");
+                    setTimeout(
+                        () => handleSubmit(new Event("submit") as any),
+                        1000
+                    );
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [timeRemaining]);
+
+    // Show empty state if no assessment
+    if (!assessment) {
+        return (
+            <div className="p-8 max-w-4xl mx-auto">
+                <Link to={`/assessments/${job.id}`}>
+                    <Button variant="ghost" size="sm" className="mb-4">
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to Builder
+                    </Button>
+                </Link>
+
+                <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-16">
+                        <FileQuestion className="w-16 h-16 text-muted-foreground mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">
+                            No Assessment Found
+                        </h2>
+                        <p className="text-muted-foreground mb-6 text-center max-w-md">
+                            This job doesn't have an assessment yet. Create one
+                            to start evaluating candidates.
+                        </p>
+                        <Link to={`/assessments/${job.id}`}>
+                            <Button size="lg">
+                                <Plus className="w-5 h-5 mr-2" />
+                                Create Assessment
+                            </Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     const allQuestions = assessment.sections.flatMap((s: any) => s.questions);
     const answeredCount = Object.keys(responses).length;
     const progressPercentage = (answeredCount / allQuestions.length) * 100;
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
 
     const shouldShowQuestion = (question: Question) => {
         if (!question.conditionalOn) return true;
@@ -104,14 +167,12 @@ export default function AssessmentPreview({
     ) => {
         setResponses({ ...responses, [questionId]: value });
 
-        // Clear error when user starts typing
         if (errors[questionId]) {
             const newErrors = { ...errors };
             delete newErrors[questionId];
             setErrors(newErrors);
         }
 
-        // Real-time validation
         const error = validateQuestion(question, value);
         if (error) {
             setErrors({ ...errors, [questionId]: error });
@@ -121,7 +182,6 @@ export default function AssessmentPreview({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate all visible required questions
         const newErrors: Record<string, string> = {};
         allQuestions.forEach((question: any) => {
             if (shouldShowQuestion(question)) {
@@ -143,7 +203,6 @@ export default function AssessmentPreview({
 
         setIsSubmitting(true);
         try {
-            // Submit assessment (storing in demo mode with fake candidate ID)
             const response = await fetch(`/api/assessments/${job.id}/submit`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -166,7 +225,6 @@ export default function AssessmentPreview({
 
     return (
         <div className="p-8 max-w-4xl mx-auto">
-            {/* Header */}
             <div className="mb-6">
                 <Link to={`/assessments/${job.id}`}>
                     <Button variant="ghost" size="sm" className="mb-4">
@@ -180,6 +238,36 @@ export default function AssessmentPreview({
                         Assessment Preview
                     </p>
                 </div>
+
+                {/* Timer */}
+                {timeRemaining !== null && (
+                    <Alert
+                        className={`mb-4 ${
+                            timeRemaining < 300
+                                ? "border-destructive/50 bg-destructive/10"
+                                : "border-primary/20 bg-primary/5"
+                        }`}
+                    >
+                        <Clock
+                            className={`h-4 w-4 ${
+                                timeRemaining < 300
+                                    ? "text-destructive"
+                                    : "text-primary"
+                            }`}
+                        />
+                        <AlertDescription
+                            className={
+                                timeRemaining < 300
+                                    ? "text-destructive"
+                                    : "text-primary"
+                            }
+                        >
+                            Time Remaining:{" "}
+                            <strong>{formatTime(timeRemaining)}</strong>
+                            {timeRemaining < 300 && " - Hurry up!"}
+                        </AlertDescription>
+                    </Alert>
+                )}
 
                 {/* Progress */}
                 <Card>

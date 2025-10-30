@@ -18,6 +18,7 @@ const navigation = [
     { title: "Dashboard", url: "/", icon: Home },
     { title: "Jobs", url: "/jobs", icon: Briefcase },
     { title: "Candidates", url: "/candidates", icon: Users },
+    { title: "Assessments", url: "/assessments", icon: ClipboardList },
 ];
 
 const sidebarVariants: Variants = {

@@ -1,6 +1,6 @@
 import type { Route } from "./+types/assessments.$jobId";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
     db,
     type Assessment,
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import {
     Select,
     SelectContent,
@@ -30,6 +31,8 @@ import {
     Loader2,
     ChevronDown,
     ChevronUp,
+    Clock,
+    FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,6 +52,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
         job,
         assessment: assessment || {
             jobId,
+            status: "draft" as const,
+            timeLimit: undefined,
             sections: [
                 {
                     id: crypto.randomUUID(),
@@ -66,15 +71,24 @@ function QuestionEditor({
     sectionId,
     onUpdate,
     onDelete,
+    onMoveUp,
+    onMoveDown,
+    isFirst,
+    isLast,
     allQuestions,
 }: {
     question: Question;
     sectionId: string;
     onUpdate: (q: Question) => void;
     onDelete: () => void;
+    onMoveUp: () => void;
+    onMoveDown: () => void;
+    isFirst: boolean;
+    isLast: boolean;
     allQuestions: Question[];
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
+    const [dragOver, setDragOver] = useState(false);
 
     const questionTypes = [
         { value: "single", label: "Single Choice" },
@@ -86,19 +100,61 @@ function QuestionEditor({
     ];
 
     return (
-        <Card className="mb-4">
+        <Card
+            className={`mb-4 transition-all ${
+                dragOver ? "ring-2 ring-primary" : ""
+            }`}
+            draggable
+            onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("questionId", question.id);
+            }}
+            onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                // Handle drop in parent component
+            }}
+        >
             <CardHeader
                 className="cursor-pointer"
                 onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
-                        <GripVertical className="w-5 h-5 text-muted-foreground" />
+                        <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab active:cursor-grabbing" />
                         <span className="font-medium">
                             {question.text || "New Question"}
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMoveUp();
+                            }}
+                            disabled={isFirst}
+                        >
+                            ↑
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMoveDown();
+                            }}
+                            disabled={isLast}
+                        >
+                            ↓
+                        </Button>
                         <Button
                             variant="ghost"
                             size="sm"
@@ -178,7 +234,6 @@ function QuestionEditor({
                         </div>
                     </div>
 
-                    {/* Options for single/multi choice */}
                     {(question.type === "single" ||
                         question.type === "multi") && (
                         <div className="space-y-2">
@@ -198,7 +253,6 @@ function QuestionEditor({
                         </div>
                     )}
 
-                    {/* Number range */}
                     {question.type === "number" && (
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -234,7 +288,6 @@ function QuestionEditor({
                         </div>
                     )}
 
-                    {/* Max length for text */}
                     {(question.type === "text" ||
                         question.type === "longtext") && (
                         <div className="space-y-2">
@@ -255,7 +308,6 @@ function QuestionEditor({
                         </div>
                     )}
 
-                    {/* Conditional logic */}
                     <div className="space-y-2">
                         <Label>Show Conditionally</Label>
                         <div className="grid grid-cols-2 gap-2">
@@ -327,6 +379,9 @@ export default function AssessmentBuilder({
     const { job, assessment: initialAssessment } = loaderData;
     const [assessment, setAssessment] = useState<Assessment>(initialAssessment);
     const [isSaving, setIsSaving] = useState(false);
+    const [hasTimeLimit, setHasTimeLimit] = useState(
+        !!initialAssessment.timeLimit
+    );
 
     const addSection = () => {
         setAssessment({
@@ -423,8 +478,41 @@ export default function AssessmentBuilder({
         });
     };
 
-    const handleSave = async () => {
-        // Validation
+    const moveQuestion = (
+        sectionId: string,
+        questionId: string,
+        direction: "up" | "down"
+    ) => {
+        setAssessment({
+            ...assessment,
+            sections: assessment.sections.map((s) => {
+                if (s.id !== sectionId) return s;
+
+                const idx = s.questions.findIndex((q) => q.id === questionId);
+                if (idx === -1) return s;
+
+                const newQuestions = [...s.questions];
+                if (direction === "up" && idx > 0) {
+                    [newQuestions[idx - 1], newQuestions[idx]] = [
+                        newQuestions[idx],
+                        newQuestions[idx - 1],
+                    ];
+                } else if (
+                    direction === "down" &&
+                    idx < newQuestions.length - 1
+                ) {
+                    [newQuestions[idx], newQuestions[idx + 1]] = [
+                        newQuestions[idx + 1],
+                        newQuestions[idx],
+                    ];
+                }
+
+                return { ...s, questions: newQuestions };
+            }),
+        });
+    };
+
+    const handleSave = async (saveAs: "draft" | "published") => {
         const hasEmptyQuestions = assessment.sections.some((s) =>
             s.questions.some((q) => !q.text.trim())
         );
@@ -441,12 +529,19 @@ export default function AssessmentBuilder({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     sections: assessment.sections,
+                    status: saveAs,
+                    timeLimit: hasTimeLimit ? assessment.timeLimit : undefined,
                 }),
             });
 
             if (!response.ok) throw new Error("Failed to save");
 
-            toast.success("Assessment saved successfully");
+            setAssessment({ ...assessment, status: saveAs });
+            toast.success(
+                saveAs === "draft"
+                    ? "Assessment saved as draft"
+                    : "Assessment published successfully"
+            );
         } catch (error) {
             toast.error("Failed to save assessment");
         } finally {
@@ -456,10 +551,10 @@ export default function AssessmentBuilder({
 
     const allQuestions = assessment.sections.flatMap((s) => s.questions);
     const totalQuestions = allQuestions.length;
+    const navigate = useNavigate();
 
     return (
         <div className="p-8">
-            {/* Header */}
             <div className="mb-6">
                 <Link to={`/jobs/${job.id}`}>
                     <Button variant="ghost" size="sm" className="mb-4">
@@ -469,27 +564,44 @@ export default function AssessmentBuilder({
                 </Link>
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">
-                            Assessment Builder
-                        </h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-bold">
+                                Assessment Builder
+                            </h1>
+                            <span
+                                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                    assessment.status === "published"
+                                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                }`}
+                            >
+                                {assessment.status === "published"
+                                    ? "✓ Published"
+                                    : "📝 Draft"}
+                            </span>
+                        </div>
                         <p className="text-muted-foreground mt-1">
                             {job.title} • {totalQuestions} question
                             {totalQuestions !== 1 ? "s" : ""}
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <Link to={`/assessments/${job.id}/preview`}>
-                            <Button
-                                variant="outline"
-                                disabled={totalQuestions === 0}
-                            >
-                                <Eye className="w-4 h-4 mr-2" />
-                                Preview
-                            </Button>
-                        </Link>
                         <Button
-                            onClick={handleSave}
+                            variant="outline"
+                            onClick={() => {
+                                if (totalQuestions > 0) {
+                                    navigate(`/assessments/${job.id}/preview`);
+                                }
+                            }}
+                            disabled={totalQuestions === 0}
+                        >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Preview
+                        </Button>
+                        <Button
+                            onClick={() => handleSave("draft")}
                             disabled={isSaving || totalQuestions === 0}
+                            variant="outline"
                         >
                             {isSaving ? (
                                 <>
@@ -498,8 +610,24 @@ export default function AssessmentBuilder({
                                 </>
                             ) : (
                                 <>
+                                    <FileText className="w-4 h-4 mr-2" />
+                                    Save as Draft
+                                </>
+                            )}
+                        </Button>
+                        <Button
+                            onClick={() => handleSave("published")}
+                            disabled={isSaving || totalQuestions === 0}
+                        >
+                            {isSaving ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Publishing...
+                                </>
+                            ) : (
+                                <>
                                     <Save className="w-4 h-4 mr-2" />
-                                    Save Assessment
+                                    Publish
                                 </>
                             )}
                         </Button>
@@ -507,8 +635,67 @@ export default function AssessmentBuilder({
                 </div>
             </div>
 
+            {/* Time Limit Settings */}
+            <Card className="mb-6">
+                <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Clock className="w-5 h-5 text-muted-foreground" />
+                            <div>
+                                <Label className="text-base font-medium">
+                                    Time Limit
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Set a time limit for completing this
+                                    assessment
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            {hasTimeLimit && (
+                                <Input
+                                    type="number"
+                                    min={5}
+                                    max={240}
+                                    value={assessment.timeLimit || 60}
+                                    onChange={(e) =>
+                                        setAssessment({
+                                            ...assessment,
+                                            timeLimit: Number(e.target.value),
+                                        })
+                                    }
+                                    className="w-24"
+                                    placeholder="60"
+                                />
+                            )}
+                            {hasTimeLimit && (
+                                <span className="text-sm text-muted-foreground">
+                                    minutes
+                                </span>
+                            )}
+                            <Switch
+                                checked={hasTimeLimit}
+                                onCheckedChange={(checked) => {
+                                    setHasTimeLimit(checked);
+                                    if (!checked) {
+                                        setAssessment({
+                                            ...assessment,
+                                            timeLimit: undefined,
+                                        });
+                                    } else {
+                                        setAssessment({
+                                            ...assessment,
+                                            timeLimit: 60,
+                                        });
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Builder */}
                 <div className="lg:col-span-2 space-y-6">
                     {assessment.sections.map((section) => (
                         <Card key={section.id}>
@@ -558,27 +745,50 @@ export default function AssessmentBuilder({
                                     </div>
                                 ) : (
                                     <>
-                                        {section.questions.map((question) => (
-                                            <QuestionEditor
-                                                key={question.id}
-                                                question={question}
-                                                sectionId={section.id}
-                                                onUpdate={(q) =>
-                                                    updateQuestion(
-                                                        section.id,
-                                                        question.id,
-                                                        q
-                                                    )
-                                                }
-                                                onDelete={() =>
-                                                    deleteQuestion(
-                                                        section.id,
-                                                        question.id
-                                                    )
-                                                }
-                                                allQuestions={allQuestions}
-                                            />
-                                        ))}
+                                        {section.questions.map(
+                                            (question, idx) => (
+                                                <QuestionEditor
+                                                    key={question.id}
+                                                    question={question}
+                                                    sectionId={section.id}
+                                                    onUpdate={(q) =>
+                                                        updateQuestion(
+                                                            section.id,
+                                                            question.id,
+                                                            q
+                                                        )
+                                                    }
+                                                    onDelete={() =>
+                                                        deleteQuestion(
+                                                            section.id,
+                                                            question.id
+                                                        )
+                                                    }
+                                                    onMoveUp={() =>
+                                                        moveQuestion(
+                                                            section.id,
+                                                            question.id,
+                                                            "up"
+                                                        )
+                                                    }
+                                                    onMoveDown={() =>
+                                                        moveQuestion(
+                                                            section.id,
+                                                            question.id,
+                                                            "down"
+                                                        )
+                                                    }
+                                                    isFirst={idx === 0}
+                                                    isLast={
+                                                        idx ===
+                                                        section.questions
+                                                            .length -
+                                                            1
+                                                    }
+                                                    allQuestions={allQuestions}
+                                                />
+                                            )
+                                        )}
                                         <Button
                                             variant="outline"
                                             className="w-full"
@@ -605,185 +815,32 @@ export default function AssessmentBuilder({
                     </Button>
                 </div>
 
-                {/* Sidebar - Live Preview */}
                 <div className="space-y-6">
                     <Card className="sticky top-6">
-                        <CardHeader>
-                            <CardTitle>Live Preview</CardTitle>
-                        </CardHeader>
-                        <CardContent className="max-h-[calc(100vh-200px)] overflow-y-auto space-y-6">
-                            {assessment.sections.map(
-                                (section, sectionIndex) => (
-                                    <div key={section.id}>
-                                        <h3 className="font-semibold text-lg mb-3">
-                                            {section.title}
-                                        </h3>
-                                        <div className="space-y-4">
-                                            {section.questions.map(
-                                                (question) => (
-                                                    <div
-                                                        key={question.id}
-                                                        className="space-y-2"
-                                                    >
-                                                        <Label className="flex items-center gap-1">
-                                                            {question.text ||
-                                                                "Question text..."}
-                                                            {question.required && (
-                                                                <span className="text-destructive">
-                                                                    *
-                                                                </span>
-                                                            )}
-                                                        </Label>
-
-                                                        {/* Preview based on question type */}
-                                                        {question.type ===
-                                                            "single" && (
-                                                            <div className="space-y-2">
-                                                                {(
-                                                                    question.options || [
-                                                                        "Option 1",
-                                                                        "Option 2",
-                                                                    ]
-                                                                ).map(
-                                                                    (
-                                                                        option,
-                                                                        i
-                                                                    ) => (
-                                                                        <label
-                                                                            key={
-                                                                                i
-                                                                            }
-                                                                            className="flex items-center gap-2 text-sm p-2 border border-border rounded hover:bg-accent/50 cursor-pointer"
-                                                                        >
-                                                                            <input
-                                                                                type="radio"
-                                                                                name={
-                                                                                    question.id
-                                                                                }
-                                                                                disabled
-                                                                            />
-                                                                            {
-                                                                                option
-                                                                            }
-                                                                        </label>
-                                                                    )
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                        {question.type ===
-                                                            "multi" && (
-                                                            <div className="space-y-2">
-                                                                {(
-                                                                    question.options || [
-                                                                        "Option 1",
-                                                                        "Option 2",
-                                                                    ]
-                                                                ).map(
-                                                                    (
-                                                                        option,
-                                                                        i
-                                                                    ) => (
-                                                                        <label
-                                                                            key={
-                                                                                i
-                                                                            }
-                                                                            className="flex items-center gap-2 text-sm p-2 border border-border rounded hover:bg-accent/50 cursor-pointer"
-                                                                        >
-                                                                            <input
-                                                                                type="checkbox"
-                                                                                disabled
-                                                                            />
-                                                                            {
-                                                                                option
-                                                                            }
-                                                                        </label>
-                                                                    )
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                        {question.type ===
-                                                            "text" && (
-                                                            <Input
-                                                                placeholder="Short answer..."
-                                                                disabled
-                                                            />
-                                                        )}
-
-                                                        {question.type ===
-                                                            "longtext" && (
-                                                            <Textarea
-                                                                placeholder="Long answer..."
-                                                                rows={3}
-                                                                disabled
-                                                            />
-                                                        )}
-
-                                                        {question.type ===
-                                                            "number" && (
-                                                            <Input
-                                                                type="number"
-                                                                placeholder={`${
-                                                                    question.minValue ||
-                                                                    0
-                                                                } - ${
-                                                                    question.maxValue ||
-                                                                    100
-                                                                }`}
-                                                                disabled
-                                                            />
-                                                        )}
-
-                                                        {question.type ===
-                                                            "file" && (
-                                                            <div className="border-2 border-dashed border-border rounded-lg p-4 text-center text-sm text-muted-foreground">
-                                                                Click to upload
-                                                                or drag and drop
-                                                            </div>
-                                                        )}
-
-                                                        {question.conditionalOn && (
-                                                            <p className="text-xs text-primary flex items-center gap-1">
-                                                                <span>⚡</span>
-                                                                Conditional:
-                                                                Shows when
-                                                                another question
-                                                                equals "
-                                                                {
-                                                                    question
-                                                                        .conditionalOn
-                                                                        .value
-                                                                }
-                                                                "
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                )
-                                            )}
-                                        </div>
-                                        {sectionIndex <
-                                            assessment.sections.length - 1 && (
-                                            <Separator className="my-4" />
-                                        )}
-                                    </div>
-                                )
-                            )}
-
-                            {totalQuestions === 0 && (
-                                <p className="text-sm text-muted-foreground text-center py-8">
-                                    Add questions to see preview
-                                </p>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Stats */}
-                    <Card>
                         <CardHeader>
                             <CardTitle>Assessment Stats</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Status:
+                                </span>
+                                <span className="font-medium capitalize">
+                                    {assessment.status}
+                                </span>
+                            </div>
+                            <Separator />
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                    Time Limit:
+                                </span>
+                                <span className="font-medium">
+                                    {assessment.timeLimit
+                                        ? `${assessment.timeLimit} min`
+                                        : "No limit"}
+                                </span>
+                            </div>
+                            <Separator />
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
                                     Sections:
@@ -826,47 +883,26 @@ export default function AssessmentBuilder({
                                     }
                                 </span>
                             </div>
-                            <Separator />
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">
-                                    Question Types:
-                                </span>
-                                <div className="text-right">
-                                    {Object.entries(
-                                        allQuestions.reduce((acc, q) => {
-                                            acc[q.type] =
-                                                (acc[q.type] || 0) + 1;
-                                            return acc;
-                                        }, {} as Record<string, number>)
-                                    ).map(([type, count]) => (
-                                        <div
-                                            key={type}
-                                            className="text-xs text-muted-foreground capitalize"
-                                        >
-                                            {type}: {count}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
                         </CardContent>
                     </Card>
 
-                    {/* Tips */}
                     <Card className="border-primary/20 bg-primary/5">
                         <CardHeader>
                             <CardTitle className="text-sm">💡 Tips</CardTitle>
                         </CardHeader>
                         <CardContent className="text-xs space-y-2">
                             <p>
+                                • Drag questions using the grip icon to reorder
+                            </p>
+                            <p>
                                 • Use conditional questions to create dynamic
                                 assessments
                             </p>
                             <p>
-                                • Required questions are marked with a red
-                                asterisk
+                                • Save as draft to keep working, publish when
+                                ready
                             </p>
-                            <p>• Preview your assessment before saving</p>
-                            <p>• Drag questions to reorder (coming soon)</p>
+                            <p>• Preview your assessment before publishing</p>
                         </CardContent>
                     </Card>
                 </div>
