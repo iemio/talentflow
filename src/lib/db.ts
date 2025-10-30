@@ -16,10 +16,18 @@ export interface Candidate {
     id: string;
     name: string;
     email: string;
+    phone: string;
     jobId: string;
-    stage: "applied" | "screen" | "tech" | "offer" | "hired" | "rejected";
+    stage:
+        | "applied"
+        | "screen"
+        | "interview"
+        | "tech"
+        | "offer"
+        | "hired"
+        | "rejected";
     appliedAt: Date;
-    notes?: string;
+    resumeUrl: string;
 }
 
 export interface StatusChange {
@@ -31,12 +39,34 @@ export interface StatusChange {
     note?: string;
 }
 
+export interface Note {
+    id?: number;
+    candidateId: string;
+    content: string;
+    mentions: string[]; // Array of mentioned user names/ids
+    createdAt: Date;
+    createdBy: string; // User who created the note
+}
+
+export interface Interview {
+    id?: number;
+    candidateId: string;
+    type: "phone" | "video" | "onsite" | "technical" | "behavioral";
+    title: string;
+    interviewers: string[];
+    date: Date;
+    duration: number; // in minutes
+    notes?: string;
+    status: "scheduled" | "completed" | "cancelled";
+    createdAt: Date;
+}
+
 export interface Assessment {
     id?: number;
     jobId: string;
     sections: AssessmentSection[];
     status: "draft" | "published";
-    timeLimit?: number; // in minutes, undefined means no limit
+    timeLimit?: number;
     updatedAt: Date;
 }
 
@@ -64,20 +94,26 @@ export interface AssessmentResponse {
     jobId: string;
     responses: Record<string, any>;
     submittedAt: Date;
+    completionTime?: number; // in minutes
+    score?: number; // percentage score
 }
 
 const db = new Dexie("TalentFlowDB") as Dexie & {
     jobs: EntityTable<Job, "id">;
     candidates: EntityTable<Candidate, "id">;
     statusChanges: EntityTable<StatusChange, "id">;
+    notes: EntityTable<Note, "id">;
+    interviews: EntityTable<Interview, "id">;
     assessments: EntityTable<Assessment, "id">;
     assessmentResponses: EntityTable<AssessmentResponse, "id">;
 };
 
-db.version(1).stores({
+db.version(2).stores({
     jobs: "id, status, order, slug, *tags",
-    candidates: "id, jobId, stage, name, email",
+    candidates: "id, jobId, stage, name, email, phone",
     statusChanges: "++id, candidateId, timestamp",
+    notes: "++id, candidateId, createdAt",
+    interviews: "++id, candidateId, date, status",
     assessments: "++id, jobId, updatedAt",
     assessmentResponses: "++id, candidateId, jobId, submittedAt",
 });

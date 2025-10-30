@@ -1,4 +1,4 @@
-// src/lib/mirage.ts - UPDATED WITH DRAFT/PUBLISHED STATUS
+// src/lib/mirage.ts - UPDATED WITH ALL NEW FEATURES
 import { createServer, Model, Factory, Response } from "miragejs";
 import { db, type Job } from "./db";
 import { faker } from "@faker-js/faker";
@@ -66,6 +66,9 @@ export function makeServer({ environment = "development" } = {}) {
                 email() {
                     return faker.internet.email();
                 },
+                phone() {
+                    return faker.phone.number();
+                },
                 jobId() {
                     return "";
                 },
@@ -73,6 +76,7 @@ export function makeServer({ environment = "development" } = {}) {
                     return faker.helpers.arrayElement([
                         "applied",
                         "screen",
+                        "interview",
                         "tech",
                         "offer",
                         "hired",
@@ -81,6 +85,10 @@ export function makeServer({ environment = "development" } = {}) {
                 },
                 appliedAt() {
                     return faker.date.past();
+                },
+                resumeUrl() {
+                    // All candidates use the same resume URL
+                    return "https://drive.google.com/file/d/1Lh-Aw3ZeFVPQxNMPLtWWAougB3eDxJvy/view?usp=sharing";
                 },
             }),
         },
@@ -120,29 +128,140 @@ export function makeServer({ environment = "development" } = {}) {
                     );
 
                     for (const candidate of candidates) {
+                        const candidateId = candidate.id;
+                        const stage = candidate.stage;
+
                         await db.candidates.put({
-                            id: candidate.id,
+                            id: candidateId,
                             name: candidate.name,
                             email: candidate.email,
+                            phone: candidate.phone,
                             jobId: candidate.jobId,
-                            stage: candidate.stage as any,
+                            stage: stage as any,
                             appliedAt: new Date(candidate.appliedAt),
+                            resumeUrl: candidate.resumeUrl,
                         });
+
+                        // Logical seeding based on stage progression
+                        const stageProgression = [
+                            "applied",
+                            "screen",
+                            "interview",
+                            "tech",
+                            "offer",
+                            "hired",
+                            "rejected",
+                        ];
+                        const currentStageIndex =
+                            stageProgression.indexOf(stage);
+
+                        // Add notes for candidates who have progressed (screen and beyond)
+                        if (currentStageIndex >= 1) {
+                            const noteCount = faker.number.int({
+                                min: 1,
+                                max: 3,
+                            });
+                            for (let i = 0; i < noteCount; i++) {
+                                await db.notes.add({
+                                    candidateId,
+                                    content: faker.helpers.arrayElement([
+                                        "Strong technical background, good fit for the role.",
+                                        "Impressive communication skills during initial screening.",
+                                        "Has relevant experience with our tech stack.",
+                                        "Culture fit looks promising, team would like them.",
+                                        "Salary expectations align with our budget.",
+                                        "References checked out well. cc @Sarah",
+                                        "Follow up needed on availability. @Mike please check",
+                                    ]),
+                                    mentions: faker.datatype.boolean()
+                                        ? [faker.person.firstName()]
+                                        : [],
+                                    createdAt: faker.date.recent({ days: 20 }),
+                                    createdBy: faker.person.fullName(),
+                                });
+                            }
+                        }
+
+                        // Add interviews for candidates in interview stage or beyond (but not rejected)
+                        if (currentStageIndex >= 2 && stage !== "rejected") {
+                            const interviewCount = Math.min(
+                                currentStageIndex - 1,
+                                3
+                            );
+
+                            for (let i = 0; i < interviewCount; i++) {
+                                const interviewTypes = [
+                                    "phone",
+                                    "video",
+                                    "technical",
+                                    "behavioral",
+                                    "onsite",
+                                ];
+                                const interviewType =
+                                    interviewTypes[
+                                        Math.min(i, interviewTypes.length - 1)
+                                    ];
+
+                                const isPastInterview =
+                                    i < interviewCount - 1 ||
+                                    currentStageIndex > 2;
+
+                                await db.interviews.add({
+                                    candidateId,
+                                    type: interviewType as any,
+                                    title: faker.helpers.arrayElement([
+                                        "Initial Screening",
+                                        "Technical Round " + (i + 1),
+                                        "Behavioral Interview",
+                                        "System Design Discussion",
+                                        "Final Interview with CTO",
+                                    ]),
+                                    interviewers: faker.helpers.arrayElements(
+                                        [
+                                            "John Smith",
+                                            "Sarah Johnson",
+                                            "Mike Chen",
+                                            "Emily Davis",
+                                            "Alex Kumar",
+                                        ],
+                                        faker.number.int({ min: 1, max: 3 })
+                                    ),
+                                    date: isPastInterview
+                                        ? faker.date.recent({ days: 30 })
+                                        : faker.date.soon({ days: 14 }),
+                                    duration: faker.helpers.arrayElement([
+                                        30, 45, 60, 90,
+                                    ]),
+                                    notes: isPastInterview
+                                        ? faker.helpers.arrayElement([
+                                              "Candidate demonstrated strong problem-solving skills",
+                                              "Good cultural fit, team rapport was excellent",
+                                              "Technical knowledge is solid, some areas need work",
+                                              "Communication skills are outstanding",
+                                              "Would recommend moving forward",
+                                          ])
+                                        : faker.datatype.boolean()
+                                        ? "Please prepare coding questions on data structures"
+                                        : undefined,
+                                    status: isPastInterview
+                                        ? "completed"
+                                        : "scheduled",
+                                    createdAt: faker.date.recent({ days: 35 }),
+                                });
+                            }
+                        }
                     }
                 }
 
-                // Create assessments with draft/published status and time limits
-                const sampleJobs = jobs.slice(0, 5);
+                // Create assessments with responses
+                const sampleJobs = jobs.slice(0, 8);
                 for (const job of sampleJobs) {
                     const hasTimeLimit = faker.datatype.boolean();
                     await db.assessments.add({
                         jobId: job.id,
-                        status: faker.helpers.arrayElement([
-                            "draft",
-                            "published",
-                        ]),
+                        status: "published",
                         timeLimit: hasTimeLimit
-                            ? faker.number.int({ min: 15, max: 120 })
+                            ? faker.number.int({ min: 30, max: 120 })
                             : undefined,
                         sections: [
                             {
@@ -175,11 +294,100 @@ export function makeServer({ environment = "development" } = {}) {
                                             "Next.js",
                                         ],
                                     },
+                                    {
+                                        id: faker.string.uuid(),
+                                        type: "text",
+                                        text: "Describe your experience with databases",
+                                        required: true,
+                                    },
+                                ],
+                            },
+                            {
+                                id: faker.string.uuid(),
+                                title: "Problem Solving",
+                                questions: [
+                                    {
+                                        id: faker.string.uuid(),
+                                        type: "longtext",
+                                        text: "Describe a challenging problem you solved recently",
+                                        required: true,
+                                        maxLength: 1000,
+                                    },
                                 ],
                             },
                         ],
                         updatedAt: new Date(),
                     });
+
+                    // Add assessment responses for candidates who reached tech stage or beyond
+                    const jobCandidates = await db.candidates
+                        .where("jobId")
+                        .equals(job.id)
+                        .toArray();
+
+                    for (const candidate of jobCandidates) {
+                        const stageProgression = [
+                            "applied",
+                            "screen",
+                            "interview",
+                            "tech",
+                            "offer",
+                            "hired",
+                            "rejected",
+                        ];
+                        const currentStageIndex = stageProgression.indexOf(
+                            candidate.stage
+                        );
+
+                        // Only candidates who reached tech stage or beyond have assessment responses
+                        // (excluding rejected at earlier stages)
+                        if (
+                            currentStageIndex >= 3 ||
+                            (candidate.stage === "rejected" &&
+                                currentStageIndex >= 2)
+                        ) {
+                            const timeLimit = hasTimeLimit
+                                ? faker.number.int({ min: 30, max: 120 })
+                                : 90;
+                            const completionTime = faker.number.int({
+                                min: Math.floor(timeLimit * 0.4),
+                                max: Math.floor(timeLimit * 0.95),
+                            });
+
+                            // Better candidates (offer, hired) get higher scores
+                            let score;
+                            if (["offer", "hired"].includes(candidate.stage)) {
+                                score = faker.number.int({ min: 75, max: 98 });
+                            } else if (candidate.stage === "tech") {
+                                score = faker.number.int({ min: 65, max: 85 });
+                            } else if (candidate.stage === "rejected") {
+                                score = faker.number.int({ min: 40, max: 70 });
+                            } else {
+                                score = faker.number.int({ min: 60, max: 90 });
+                            }
+
+                            await db.assessmentResponses.add({
+                                candidateId: candidate.id,
+                                jobId: job.id,
+                                responses: {
+                                    q1: faker.helpers.arrayElement([
+                                        "JavaScript",
+                                        "Python",
+                                        "Java",
+                                    ]),
+                                    q2: faker.helpers.arrayElements(
+                                        ["React", "Vue", "Angular", "Next.js"],
+                                        2
+                                    ),
+                                    q3: "Extensive experience with PostgreSQL and MongoDB...",
+                                    q4: "Recently optimized a database query that reduced load time by 60%...",
+                                },
+                                submittedAt: faker.date.recent({ days: 25 }),
+                                completionTime,
+                                score,
+                            });
+                        }
+                    }
                 }
             } else {
                 console.log("🟢 Mirage: existing data found, skipping reseed");
@@ -204,7 +412,7 @@ export function makeServer({ environment = "development" } = {}) {
 
             this.timing = faker.number.int({ min: 200, max: 1200 });
 
-            // Jobs endpoints
+            // Jobs endpoints (keeping existing)
             this.get("/jobs", async (schema, request) => {
                 const {
                     search,
@@ -286,10 +494,6 @@ export function makeServer({ environment = "development" } = {}) {
                 const jobId = request.params.id;
                 const { fromOrder, toOrder } = JSON.parse(request.requestBody);
 
-                console.log(
-                    `🔄 Reordering job ${jobId} from order ${fromOrder} to order ${toOrder}`
-                );
-
                 try {
                     await db.transaction("rw", db.jobs, async () => {
                         const allJobs = await db.jobs
@@ -317,13 +521,10 @@ export function makeServer({ environment = "development" } = {}) {
                                 updatedAt: new Date(),
                             });
                         }
-
-                        console.log("✅ Reorder complete");
                     });
 
                     return { success: true };
                 } catch (error) {
-                    console.error("❌ Reorder failed:", error);
                     return new Response(500, {}, { error: "Reorder failed" });
                 }
             });
@@ -391,14 +592,63 @@ export function makeServer({ environment = "development" } = {}) {
                 return db.candidates.get(id);
             });
 
-            this.get("/candidates/:id/timeline", async (schema, request) => {
-                const id = request.params.id;
-                const changes = await db.statusChanges
+            // Notes endpoints
+            this.get("/candidates/:id/notes", async (schema, request) => {
+                const notes = await db.notes
                     .where("candidateId")
-                    .equals(id)
-                    .sortBy("timestamp");
+                    .equals(request.params.id)
+                    .reverse()
+                    .sortBy("createdAt");
 
-                return { data: changes };
+                return { data: notes };
+            });
+
+            this.post("/candidates/:id/notes", async (schema, request) => {
+                const data = JSON.parse(request.requestBody);
+                const noteId = await db.notes.add({
+                    candidateId: request.params.id,
+                    content: data.content,
+                    mentions: data.mentions || [],
+                    createdAt: new Date(),
+                    createdBy: "Current User", // In real app, get from auth
+                });
+
+                return db.notes.get(noteId);
+            });
+
+            // Interviews endpoints
+            this.get("/candidates/:id/interviews", async (schema, request) => {
+                const interviews = await db.interviews
+                    .where("candidateId")
+                    .equals(request.params.id)
+                    .sortBy("date");
+
+                return { data: interviews };
+            });
+
+            this.post("/candidates/:id/interviews", async (schema, request) => {
+                const data = JSON.parse(request.requestBody);
+                const interviewId = await db.interviews.add({
+                    candidateId: request.params.id,
+                    ...data,
+                    createdAt: new Date(),
+                });
+
+                return db.interviews.get(interviewId);
+            });
+
+            this.patch("/interviews/:id", async (schema, request) => {
+                const id = parseInt(request.params.id);
+                const attrs = JSON.parse(request.requestBody);
+
+                await db.interviews.update(id, attrs);
+                return db.interviews.get(id);
+            });
+
+            this.delete("/interviews/:id", async (schema, request) => {
+                const id = parseInt(request.params.id);
+                await db.interviews.delete(id);
+                return { success: true };
             });
 
             // Assessment endpoints
