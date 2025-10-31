@@ -1,8 +1,34 @@
 # TalentFlow - React Technical Assignment
 
+---
+
+## Table of Contents
+
+-   [Project Overview](#project-overview)
+-   [Assignment Requirements Fulfillment](#assignment-requirements-fulfillment)
+-   [Technical Implementation](#technical-implementation)
+-   [Architecture & Technical Decisions](#architecture--technical-decisions)
+-   [Login Instructions](#login-instructions)
+-   [UI/UX Highlights](#uiux-highlights)
+-   [Performance Optimizations](#performance-optimizations)
+-   [Deployment](#deployment)
+-   [Project Structure (Detailed)](#project-structure-detailed)
+-   [Bonus Features Implemented](#bonus-features-implemented)
+-   [Technical Documentation](#technical-documentation)
+-   [Development Workflow](#development-workflow)
+-   [Learning Resources](#learning-resources)
+-   [Future Enhancements](#future-enhancements)
+-   [Code Style & Commit Convention](#code-style)
+-   [Acknowledgments](#acknowledgments)
+-   [Contact](#contact)
+
+---
+
 ## Project Overview
 
 TalentFlow is a comprehensive front-end hiring platform built with React Router v7 that enables HR teams to manage jobs, candidates, and custom assessments. The application simulates a full-stack experience using local-first architecture with IndexedDB persistence and mock API layer.
+
+---
 
 ## Assignment Requirements Fulfillment
 
@@ -58,6 +84,8 @@ TalentFlow is a comprehensive front-end hiring platform built with React Router 
 -   Draft/Publish Workflow: Save as draft or publish assessments
 -   Time Limits: Optional assessment time limits with countdown timer
 -   Progress Tracking: Visual progress bar showing completion percentage
+
+---
 
 ## Technical Implementation
 
@@ -117,6 +145,8 @@ POST /api/assessments/:jobId/submit
 -   Stage-appropriate interview counts and notes
 -   Assessment completion rates matching hiring funnel
 
+---
+
 ## Architecture & Technical Decisions
 
 ### Framework Choice: React Router v7
@@ -144,6 +174,8 @@ Benefits:
 -   URL as single source of truth for navigation state
 -   Natural data flow with React Router patterns
 -   Easy to debug and test
+
+---
 
 ## Login Instructions
 
@@ -410,6 +442,8 @@ Query Performance:
 -   Without index: ~150ms for 1000 candidates
 -   With index: ~5ms for same query
 
+---
+
 ## Deployment
 
 ### Build Configuration
@@ -452,6 +486,8 @@ RUN npm run build
 EXPOSE 3000
 CMD ["npm", "start"]
 ```
+
+---
 
 ---
 
@@ -512,6 +548,8 @@ talentflow/
 ├── vite.config.ts # Vite bundler configuration
 └── README.md # This file
 ```
+
+---
 
 ## Bonus Features Implemented
 
@@ -585,6 +623,8 @@ Beyond Requirements
 -   JSON export functionality prepared
 -   CSV export structure defined
 -   Easy to extend with download buttons
+
+---
 
 ## Technical Documentation
 
@@ -746,6 +786,8 @@ const handleUpdate = async (newData) => {
 };
 ```
 
+---
+
 ## Development Workflow
 
 ### Getting Started
@@ -857,6 +899,8 @@ fix: Resolve drag-and-drop on mobile
 perf: Optimize candidate list rendering
 docs: Update README with deployment guide
 ```
+
+---
 
 ## Acknowledgments
 
