@@ -21,6 +21,7 @@ import {
     X,
     Star,
     Sparkles,
+    Github,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 
@@ -285,7 +286,15 @@ export default function TalentFlowLanding() {
                             variant="outline"
                             className="text-lg px-10 py-7 rounded-2xl"
                         >
-                            Watch Demo Video
+                            <a
+                                href="https://github.com/iemio/talentflow"
+                                target="_blank"
+                                className="flex flex-row items-center gap-2"
+                                rel="noopener noreferrer"
+                            >
+                                <Github />
+                                View Github repo
+                            </a>
                         </Button>
                     </div>
                     <p className="mt-6 text-sm text-muted-foreground">

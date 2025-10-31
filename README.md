@@ -27,31 +27,30 @@ TalentFlow is a comprehensive front-end hiring platform built with React Router 
 -   Kanban Board: Drag-and-drop stage management at /dashboard/candidates/kanban
 -   Notes with @Mentions: Rich note system with @mention support and rendering
 -   Additional Features:
-
--   Interview scheduling and tracking
--   Resume viewing integration
--   Assessment response tracking
--   Multiple views (list and kanban)
+    -   Interview scheduling and tracking
+    -   Resume viewing integration
+    -   Assessment response tracking
+    -   Multiple views (list and kanban)
 
 #### 3. Assessments
 
 -   Assessment Builder: Full-featured builder per job at /dashboard/assessments/:jobId
 -   Question Types Supported:
 
--   Single choice (radio buttons)
--   Multiple choice (checkboxes)
--   Short text (with max length)
--   Long text (textarea with max length)
--   Numeric (with min/max range validation)
--   File upload (stub implementation)
+    -   Single choice (radio buttons)
+    -   Multiple choice (checkboxes)
+    -   Short text (with max length)
+    -   Long text (textarea with max length)
+    -   Numeric (with min/max range validation)
+    -   File upload (stub implementation)
 
 -   Live Preview: Real-time preview at /dashboard/assessments/:jobId/preview
 -   Validation Rules:
 
--   Required field validation
--   Numeric range constraints
--   Max character length enforcement
--   Real-time error display
+    -   Required field validation
+    -   Numeric range constraints
+    -   Max character length enforcement
+    -   Real-time error display
 
 -   Conditional Questions: Show/hide questions based on previous answers
 -   Sections: Organize questions into collapsible sections
@@ -145,6 +144,13 @@ Benefits:
 -   URL as single source of truth for navigation state
 -   Natural data flow with React Router patterns
 -   Easy to debug and test
+
+## Login Instructions
+
+No login credentials are required to explore the app.
+Simply click the `“Try Demo Account”` button on the landing page to instantly access the full demo environment.
+
+> Note: This feature is designed for evaluation — it bypasses authentication and takes you directly to the dashboard (/dashboard/overview).
 
 ### Key Technical Decisions
 
