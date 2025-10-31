@@ -10,23 +10,23 @@ TalentFlow is a comprehensive front-end hiring platform built with React Router 
 
 #### 1. Jobs Board
 
-✅ Pagination & Filtering: Server-like pagination with search by title, filter by status, and tag support
-✅ Create/Edit Job: Comprehensive job editor with validation (title required, unique slug, salary ranges)
-✅ Archive/Unarchive: Toggle job status between active and archived
-✅ Drag-and-Drop Reordering: @dnd-kit implementation with optimistic updates and automatic rollback on failure
-✅ Deep Linking: Individual job routes at /dashboard/jobs/:jobId
-✅ Advanced Fields: Department, location, employment type, compensation, benefits, requirements
+-   Pagination & Filtering: Server-like pagination with search by title, filter by status, and tag support
+-   Create/Edit Job: Comprehensive job editor with validation (title required, unique slug, salary ranges)
+-   Archive/Unarchive: Toggle job status between active and archived
+-   Drag-and-Drop Reordering: @dnd-kit implementation with optimistic updates and automatic rollback on failure
+-   Deep Linking: Individual job routes at /dashboard/jobs/:jobId
+-   Advanced Fields: Department, location, employment type, compensation, benefits, requirements
 
 #### 2. Candidates
 
-✅ Virtualized List: @tanstack/react-virtual rendering 1000+ candidates efficiently
-✅ Client-Side Search: Real-time filtering by name and email
-✅ Server-Like Filtering: Stage-based filtering with URL state management
-✅ Candidate Profile: Detailed route at /dashboard/candidates/:id with complete timeline
-✅ Status Timeline: Visual timeline showing all stage transitions with timestamps
-✅ Kanban Board: Drag-and-drop stage management at /dashboard/candidates/kanban
-✅ Notes with @Mentions: Rich note system with @mention support and rendering
-✅ Additional Features:
+-   Virtualized List: @tanstack/react-virtual rendering 1000+ candidates efficiently
+-   Client-Side Search: Real-time filtering by name and email
+-   Server-Like Filtering: Stage-based filtering with URL state management
+-   Candidate Profile: Detailed route at /dashboard/candidates/:id with complete timeline
+-   Status Timeline: Visual timeline showing all stage transitions with timestamps
+-   Kanban Board: Drag-and-drop stage management at /dashboard/candidates/kanban
+-   Notes with @Mentions: Rich note system with @mention support and rendering
+-   Additional Features:
 
 -   Interview scheduling and tracking
 -   Resume viewing integration
@@ -35,8 +35,8 @@ TalentFlow is a comprehensive front-end hiring platform built with React Router 
 
 #### 3. Assessments
 
-✅ Assessment Builder: Full-featured builder per job at /dashboard/assessments/:jobId
-✅ Question Types Supported:
+-   Assessment Builder: Full-featured builder per job at /dashboard/assessments/:jobId
+-   Question Types Supported:
 
 -   Single choice (radio buttons)
 -   Multiple choice (checkboxes)
@@ -45,20 +45,20 @@ TalentFlow is a comprehensive front-end hiring platform built with React Router 
 -   Numeric (with min/max range validation)
 -   File upload (stub implementation)
 
-✅ Live Preview: Real-time preview at /dashboard/assessments/:jobId/preview
-✅ Validation Rules:
+-   Live Preview: Real-time preview at /dashboard/assessments/:jobId/preview
+-   Validation Rules:
 
 -   Required field validation
 -   Numeric range constraints
 -   Max character length enforcement
 -   Real-time error display
 
-✅ Conditional Questions: Show/hide questions based on previous answers
-✅ Sections: Organize questions into collapsible sections
-✅ Persistence: All builder state and responses stored in IndexedDB
-✅ Draft/Publish Workflow: Save as draft or publish assessments
-✅ Time Limits: Optional assessment time limits with countdown timer
-✅ Progress Tracking: Visual progress bar showing completion percentage
+-   Conditional Questions: Show/hide questions based on previous answers
+-   Sections: Organize questions into collapsible sections
+-   Persistence: All builder state and responses stored in IndexedDB
+-   Draft/Publish Workflow: Save as draft or publish assessments
+-   Time Limits: Optional assessment time limits with countdown timer
+-   Progress Tracking: Visual progress bar showing completion percentage
 
 ## Technical Implementation
 
@@ -97,26 +97,26 @@ POST /api/assessments/:jobId/submit
 
 #### Network Simulation
 
--   ✅ **Artificial Latency**: 200-1200ms random delay per request
--   ✅ **Error Injection**: 5-10% failure rate on write endpoints (configurable)
--   ✅ **Realistic Responses**: Properly formatted JSON with meta information
+-   **Artificial Latency**: 200-1200ms random delay per request
+-   **Error Injection**: 5-10% failure rate on write endpoints (configurable)
+-   **Realistic Responses**: Properly formatted JSON with meta information
 
 #### Seed Data (Exceeds Requirements)
 
-✅ 25 jobs (mixed active/archived, various departments)
-✅ 750-1,250 candidates (30-50 per job)
-✅ 8 assessments with 3-6 questions each
-✅ 1-3 notes per candidate (in later stages)
-✅ 1-3 interviews per candidate (in interview+ stages)
-✅ Assessment responses for candidates in tech+ stages
-✅ Complete status change history for all candidates
+-   25 jobs (mixed active/archived, various departments)
+-   750-1,250 candidates (30-50 per job)
+-   8 assessments with 3-6 questions each
+-   1-3 notes per candidate (in later stages)
+-   1-3 interviews per candidate (in interview+ stages)
+-   Assessment responses for candidates in tech+ stages
+-   Complete status change history for all candidates
 
 #### Data Quality:
 
-Realistic names, emails, phone numbers via Faker.js
-Proper date ranges (applied dates in past, interviews in future/recent past)
-Stage-appropriate interview counts and notes
-Assessment completion rates matching hiring funnel
+-   Realistic names, emails, phone numbers via Faker.js
+-   Proper date ranges (applied dates in past, interviews in future/recent past)
+-   Stage-appropriate interview counts and notes
+-   Assessment completion rates matching hiring funnel
 
 ## Architecture & Technical Decisions
 
@@ -124,27 +124,27 @@ Assessment completion rates matching hiring funnel
 
 #### Why React Router v7?
 
-Built-in data loading with loaders
-File-based routing with custom configuration
-Excellent TypeScript support
-Server-side rendering capabilities (future-ready)
-Nested layouts and route hierarchies
+-   Built-in data loading with loaders
+-   File-based routing with custom configuration
+-   Excellent TypeScript support
+-   Server-side rendering capabilities (future-ready)
+-   Nested layouts and route hierarchies
 
 ### State Management Strategy
 
 #### No Global State Library Required - Using:
 
-URL State: Search params, filters, pagination
-React State: Component-level UI state
-IndexedDB: Persistent application data
-Loaders: Route-level data fetching
+-   URL State: Search params, filters, pagination
+-   React State: Component-level UI state
+-   IndexedDB: Persistent application data
+-   Loaders: Route-level data fetching
 
 Benefits:
 
-Simpler architecture, fewer dependencies
-URL as single source of truth for navigation state
-Natural data flow with React Router patterns
-Easy to debug and test
+-   Simpler architecture, fewer dependencies
+-   URL as single source of truth for navigation state
+-   Natural data flow with React Router patterns
+-   Easy to debug and test
 
 ### Key Technical Decisions
 
@@ -856,14 +856,14 @@ docs: Update README with deployment guide
 
 Assignment Requirements Met:
 
-✅ All core flows implemented
-✅ Mock API with realistic delays and errors
-✅ 1000+ candidate virtualization
-✅ Drag-and-drop with rollback
-✅ Comprehensive assessment builder
-✅ Local persistence with IndexedDB
-✅ Professional UI/UX
-✅ Deployed and documented
+-   All core flows implemented
+-   Mock API with realistic delays and errors
+-   1000+ candidate virtualization
+-   Drag-and-drop with rollback
+-   Comprehensive assessment builder
+-   Local persistence with IndexedDB
+-   Professional UI/UX
+-   Deployed and documented
 
 Bonus Features:
 
