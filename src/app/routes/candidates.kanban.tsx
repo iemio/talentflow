@@ -139,7 +139,7 @@ function CandidateCard({
     };
 
     return (
-        <Link to={`/candidates/${candidate.id}`}>
+        <Link to={`/dashboard/candidates/${candidate.id}`}>
             <Card
                 draggable
                 onDragStart={(e) => onDragStart(e, candidate)}
@@ -264,7 +264,7 @@ export default function CandidatesKanban({ loaderData }: Route.ComponentProps) {
             toast.success(`Moved ${draggedCandidate.name} to ${newStage}`);
 
             // Reload the page to reflect changes
-            navigate(`/candidates/kanban`, { replace: true });
+            navigate(`/dashboard/candidates/kanban`, { replace: true });
         } catch (error) {
             toast.error("Failed to update candidate stage");
         } finally {
@@ -285,7 +285,7 @@ export default function CandidatesKanban({ loaderData }: Route.ComponentProps) {
                             Drag and drop candidates between stages
                         </p>
                     </div>
-                    <Link to="/candidates">
+                    <Link to="/dashboard/candidates">
                         <Button variant="outline">
                             <List className="w-4 h-4 mr-2" />
                             List View

@@ -215,7 +215,7 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
             }
 
             toast.success("Job updated successfully");
-            navigate(`/jobs/${job.id}`);
+            navigate(`/dashboard/jobs/${job.id}`);
         } catch (error) {
             toast.error("Failed to update job");
             console.error(error);
@@ -241,7 +241,7 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
     return (
         <div className="p-8 max-w-5xl mx-auto">
             <div className="mb-6">
-                <Link to={`/jobs/${job.id}`}>
+                <Link to={`/dashboard/jobs/${job.id}`}>
                     <Button variant="ghost" size="sm" className="mb-4">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Job
@@ -998,7 +998,7 @@ export default function EditJob({ loaderData }: Route.ComponentProps) {
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-3">
-                    <Link to={`/jobs/${job.id}`}>
+                    <Link to={`/dashboard/jobs/${job.id}`}>
                         <Button type="button" variant="outline">
                             Cancel
                         </Button>

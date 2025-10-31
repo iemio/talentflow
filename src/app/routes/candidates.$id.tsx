@@ -177,7 +177,9 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
             if (!response.ok) throw new Error("Failed to update stage");
 
             toast.success(`Candidate moved to ${newStage}`);
-            navigate(`/candidates/${candidate.id}`, { replace: true });
+            navigate(`/dashboard/candidates/${candidate.id}`, {
+                replace: true,
+            });
         } catch (error) {
             toast.error("Failed to update candidate stage");
         } finally {
@@ -206,7 +208,9 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
 
             toast.success("Note added");
             setNewNote("");
-            navigate(`/candidates/${candidate.id}`, { replace: true });
+            navigate(`/dashboard/candidates/${candidate.id}`, {
+                replace: true,
+            });
         } catch (error) {
             toast.error("Failed to add note");
         }
@@ -260,7 +264,9 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                 duration: "60",
                 notes: "",
             });
-            navigate(`/candidates/${candidate.id}`, { replace: true });
+            navigate(`/dashboard/candidates/${candidate.id}`, {
+                replace: true,
+            });
         } catch (error) {
             toast.error("Failed to schedule interview");
         } finally {
@@ -285,7 +291,7 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
         <div className="p-8">
             {/* Header */}
             <div className="mb-6">
-                <Link to="/candidates">
+                <Link to="/dashboard/candidates">
                     <Button variant="ghost" size="sm" className="mb-4">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Candidates
@@ -339,7 +345,7 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                                     </div>
                                     {job && (
                                         <Link
-                                            to={`/jobs/${job.id}`}
+                                            to={`/dashboard/jobs/${job.id}`}
                                             className="flex items-center gap-2 mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline"
                                         >
                                             <Briefcase className="w-4 h-4" />
@@ -965,7 +971,7 @@ export default function CandidateDetail({ loaderData }: Route.ComponentProps) {
                                     className="w-full justify-start"
                                     asChild
                                 >
-                                    <Link to={`/jobs/${job.id}`}>
+                                    <Link to={`/dashboard/jobs/${job.id}`}>
                                         <Briefcase className="w-4 h-4 mr-2" />
                                         View Job
                                     </Link>

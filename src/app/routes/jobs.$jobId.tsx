@@ -170,7 +170,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
         <div className="p-8">
             {/* Header */}
             <div className="mb-6">
-                <Link to="/jobs">
+                <Link to="/dashbaord/jobs">
                     <Button variant="ghost" size="sm" className="mb-4">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Jobs
@@ -234,13 +234,13 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Link to={`/jobs/${job.id}/edit`}>
+                        <Link to={`/dashboard/jobs/${job.id}/edit`}>
                             <Button variant="outline">
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Job
                             </Button>
                         </Link>
-                        <Link to={`/assessments/${job.id}`}>
+                        <Link to={`/dashboard/assessments/${job.id}`}>
                             <Button variant="outline">
                                 <ClipboardList className="w-4 h-4 mr-2" />
                                 {hasAssessment
@@ -731,7 +731,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <Link
-                                to={`/candidates?jobId=${job.id}`}
+                                to={`/dashboard/candidates?jobId=${job.id}`}
                                 className="block"
                             >
                                 <Button
@@ -744,7 +744,7 @@ export default function JobDetail({ loaderData }: Route.ComponentProps) {
                             </Link>
 
                             <Link
-                                to={`/assessments/${job.id}`}
+                                to={`/dashboard/assessments/${job.id}`}
                                 className="block"
                             >
                                 <Button

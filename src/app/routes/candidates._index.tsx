@@ -132,7 +132,7 @@ function CandidateRow({ candidate }: { candidate: any }) {
 
     return (
         <Link
-            to={`/candidates/${candidate.id}`}
+            to={`/dashboard/candidates/${candidate.id}`}
             className="flex items-center gap-4 p-4 hover:bg-accent/50 transition-colors border-b border-border"
         >
             <Avatar>
@@ -250,7 +250,7 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
                             {filteredCandidates.length !== 1 ? "s" : ""} found
                         </p>
                     </div>
-                    <Link to="/candidates/kanban">
+                    <Link to="/dashboard/candidates/kanban">
                         <Button variant="outline">
                             <Filter className="w-4 h-4 mr-2" />
                             Kanban View
@@ -306,7 +306,7 @@ export default function CandidatesIndex({ loaderData }: Route.ComponentProps) {
                 {stages.map((stage) => (
                     <Link
                         key={stage.value}
-                        to={`/candidates?stage=${stage.value}`}
+                        to={`/dashboard/candidates?stage=${stage.value}`}
                     >
                         <Badge
                             variant={

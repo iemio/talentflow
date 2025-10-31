@@ -213,7 +213,7 @@ export default function AssessmentsPage({ loaderData }: Route.ComponentProps) {
 
                                         <div className="flex gap-2">
                                             <Link
-                                                to={`/assessments/${assessment.jobId}/preview`}
+                                                to={`/dashboard/assessments/${assessment.jobId}/preview`}
                                             >
                                                 <Button
                                                     variant="outline"
@@ -224,7 +224,7 @@ export default function AssessmentsPage({ loaderData }: Route.ComponentProps) {
                                                 </Button>
                                             </Link>
                                             <Link
-                                                to={`/assessments/${assessment.jobId}`}
+                                                to={`/dashboard/assessments/${assessment.jobId}`}
                                             >
                                                 <Button size="sm">
                                                     <Edit className="w-4 h-4 mr-2" />
@@ -307,7 +307,7 @@ export default function AssessmentsPage({ loaderData }: Route.ComponentProps) {
 
                                         <div className="flex gap-2">
                                             <Link
-                                                to={`/assessments/${assessment.jobId}/preview`}
+                                                to={`/dashboard/assessments/${assessment.jobId}/preview`}
                                             >
                                                 <Button
                                                     variant="outline"
@@ -318,7 +318,7 @@ export default function AssessmentsPage({ loaderData }: Route.ComponentProps) {
                                                 </Button>
                                             </Link>
                                             <Link
-                                                to={`/assessments/${assessment.jobId}`}
+                                                to={`/dashboard/assessments/${assessment.jobId}`}
                                             >
                                                 <Button size="sm">
                                                     <Edit className="w-4 h-4 mr-2" />
@@ -357,7 +357,9 @@ export default function AssessmentsPage({ loaderData }: Route.ComponentProps) {
                                                 No assessment created yet
                                             </p>
                                         </div>
-                                        <Link to={`/assessments/${job.id}`}>
+                                        <Link
+                                            to={`/dashboard/assessments/${job.id}`}
+                                        >
                                             <Button>
                                                 <Plus className="w-4 h-4 mr-2" />
                                                 Create Assessment
@@ -385,7 +387,7 @@ export default function AssessmentsPage({ loaderData }: Route.ComponentProps) {
                                 Create jobs first, then you can build
                                 assessments for them.
                             </p>
-                            <Link to="/jobs">
+                            <Link to="/dashboard/jobs">
                                 <Button size="lg">
                                     <Plus className="w-5 h-5 mr-2" />
                                     Go to Jobs

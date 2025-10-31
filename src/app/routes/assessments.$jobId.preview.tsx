@@ -75,7 +75,7 @@ export default function AssessmentPreview({
     if (!assessment) {
         return (
             <div className="p-8 max-w-4xl mx-auto">
-                <Link to={`/assessments/${job.id}`}>
+                <Link to={`/dashboard/assessments/${job.id}`}>
                     <Button variant="ghost" size="sm" className="mb-4">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Builder
@@ -92,7 +92,7 @@ export default function AssessmentPreview({
                             This job doesn't have an assessment yet. Create one
                             to start evaluating candidates.
                         </p>
-                        <Link to={`/assessments/${job.id}`}>
+                        <Link to={`/dashboard/assessments/${job.id}`}>
                             <Button size="lg">
                                 <Plus className="w-5 h-5 mr-2" />
                                 Create Assessment
@@ -215,7 +215,7 @@ export default function AssessmentPreview({
             if (!response.ok) throw new Error("Failed to submit");
 
             toast.success("Assessment submitted successfully!");
-            navigate(`/jobs/${job.id}`);
+            navigate(`/dashboard/jobs/${job.id}`);
         } catch (error) {
             toast.error("Failed to submit assessment");
         } finally {
@@ -226,7 +226,7 @@ export default function AssessmentPreview({
     return (
         <div className="p-8 max-w-4xl mx-auto">
             <div className="mb-6">
-                <Link to={`/assessments/${job.id}`}>
+                <Link to={`/dashboard/assessments/${job.id}`}>
                     <Button variant="ghost" size="sm" className="mb-4">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Builder

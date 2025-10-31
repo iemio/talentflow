@@ -556,7 +556,7 @@ export default function AssessmentBuilder({
     return (
         <div className="p-8">
             <div className="mb-6">
-                <Link to={`/jobs/${job.id}`}>
+                <Link to={`/dashboard/jobs/${job.id}`}>
                     <Button variant="ghost" size="sm" className="mb-4">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Job
@@ -590,7 +590,9 @@ export default function AssessmentBuilder({
                             variant="outline"
                             onClick={() => {
                                 if (totalQuestions > 0) {
-                                    navigate(`/assessments/${job.id}/preview`);
+                                    navigate(
+                                        `/dashboard/assessments/${job.id}/preview`
+                                    );
                                 }
                             }}
                             disabled={totalQuestions === 0}

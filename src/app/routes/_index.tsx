@@ -314,7 +314,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                             {data.recentJobs.map((job: any) => (
                                 <Link
                                     key={job.id}
-                                    to={`/jobs/${job.id}`}
+                                    to={`/dashboard/jobs/${job.id}`}
                                     className="block p-3 rounded-lg hover:bg-accent/50 transition-colors border border-border"
                                 >
                                     <div className="flex items-center justify-between">
@@ -346,7 +346,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                                 </Link>
                             ))}
                             <Link
-                                to="/jobs"
+                                to="/dashboard/jobs"
                                 className="block text-center py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                             >
                                 View all jobs →
@@ -367,7 +367,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <Link
-                            to="/jobs?action=create"
+                            to="/dashboard/jobs?action=create"
                             className="p-4 border-2 border-dashed border-border rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
                         >
                             <Briefcase className="w-8 h-8 text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2" />
@@ -391,7 +391,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                             </p>
                         </Link>
                         <Link
-                            to="/jobs"
+                            to="/dashboard/jobs"
                             className="p-4 border-2 border-dashed border-border rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
                         >
                             <CheckCircle className="w-8 h-8 text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2" />

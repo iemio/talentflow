@@ -179,7 +179,7 @@ function SortableJobCard({
                         <div className="flex items-start justify-between">
                             <div>
                                 <Link
-                                    to={`/jobs/${job.id}`}
+                                    to={`/dashboard/jobs/${job.id}`}
                                     className="text-lg font-semibold text-foreground hover:text-blue-600 dark:hover:text-blue-400"
                                 >
                                     {job.title}
@@ -204,7 +204,7 @@ function SortableJobCard({
                             </p>
                         )}
                         <div className="flex gap-2 mt-3">
-                            {job.tags.map((tag) => (
+                            {job.tags?.map((tag) => (
                                 <Badge
                                     key={tag}
                                     variant="outline"
@@ -223,7 +223,7 @@ function SortableJobCard({
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                     </Button>
-                    <Link to={`/jobs/${job.id}`}>
+                    <Link to={`/dashboard/jobs/${job.id}`}>
                         <Button variant="outline" size="sm">
                             <Eye className="w-4 h-4 mr-1" />
                             View
@@ -233,7 +233,7 @@ function SortableJobCard({
                         <Archive className="w-4 h-4 mr-1" />
                         {job.status === "active" ? "Archive" : "Unarchive"}
                     </Button>
-                    <Link to={`/assessments/${job.id}`}>
+                    <Link to={`/dashboard/assessments/${job.id}`}>
                         <Button variant="outline" size="sm">
                             Assessment
                         </Button>
@@ -270,7 +270,7 @@ function JobFormDialog({
                 title: job.title,
                 slug: job.slug,
                 description: job.description || "",
-                tags: job.tags.join(", "),
+                tags: job.tags?.join(", ") || "",
                 status: job.status,
             });
         } else {
